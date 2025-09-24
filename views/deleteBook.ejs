@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Remover Livro</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <title>Excluir Livro</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h1>🗑️ Remover Livro</h1>
+  <header>
+    <h1>📖 Book Notes</h1>
+    <nav>
+      <a href="/">Início</a> |
+      <a href="/books/add">Adicionar Livro</a>
+    </nav>
+    <hr>
+  </header>
 
-    <p>Tem certeza que deseja remover o livro <strong><%= book.title %></strong> de <%= book.author %>?</p>
+  <main>
+    <!-- Overlay escuro -->
+    <div class="overlay"></div>
 
-    <form action="/books/delete/<%= book.id %>" method="POST">
-        <button type="submit">Sim, Remover</button>
-    </form>
+    <!-- Modal centralizado -->
+    <div class="modal">
+      <h2>Excluir Livro</h2>
+      <p>Tem certeza que deseja excluir o livro <strong><%= book.title %></strong>?</p>
+      <div class="modal-actions">
+        <form method="POST" action="/books/delete/<%= book.id %>">
+          <button type="submit" class="btn-delete">Sim, Excluir</button>
+        </form>
+        <a href="/" class="btn-cancel">Cancelar</a>
+      </div>
+    </div>
+  </main>
 
-    <a href="/">⬅️ Cancelar</a>
+  <footer>
+    <hr>
+    <p>Feito por Tamiris 💜</p>
+  </footer>
 </body>
 </html>

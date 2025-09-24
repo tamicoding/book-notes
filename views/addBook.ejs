@@ -1,26 +1,44 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Adicionar Livro</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <title><%= book ? "Editar Livro" : "Adicionar Livro" %></title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h1>➕ Adicionar Novo Livro</h1>
+  <header>
+    <h1>📖 Book Notes</h1>
+    <nav>
+      <a href="/">Início</a> |
+      <a href="/books/add">Adicionar Livro</a>
+    </nav>
+    <hr>
+  </header>
 
-    <form action="/books/add" method="POST">
-        <label for="title">Título:</label>
-        <input type="text" name="title" id="title" required>
+  <main>
+    <form method="POST" action="<%= book ? `/books/edit/${book.id}` : '/books/add' %>" class="book-form">
+      <label>Título:</label>
+      <input type="text" name="title" value="<%= book ? book.title : '' %>" required>
 
-        <label for="author">Autor:</label>
-        <input type="text" name="author" id="author" required>
+      <label>Autor:</label>
+      <input type="text" name="author" value="<%= book ? book.author : '' %>" required>
 
-        <label for="notes">Notas:</label>
-        <textarea name="notes" id="notes"></textarea>
+      <label>Notas:</label>
+      <textarea name="notes"><%= book ? book.notes : '' %></textarea>
 
-        <button type="submit">Salvar</button>
+      <label>Rating:</label>
+      <input type="number" name="rating" value="<%= book ? book.rating : '' %>" min="0" max="5">
+
+      <label>Data de leitura:</label>
+      <input type="date" name="read_date" value="<%= book && book.read_date ? book.read_date.toISOString().split('T')[0] : '' %>">
+
+      <button type="submit"><%= book ? "Salvar Alterações" : "Adicionar Livro" %></button>
     </form>
+  </main>
 
-    <a href="/">⬅️ Voltar</a>
+  <footer>
+    <hr>
+    <p>Feito por Tamiris 💜</p>
+  </footer>
 </body>
 </html>

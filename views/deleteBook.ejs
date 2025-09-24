@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Remover Livro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <h1>🗑️ Remover Livro</h1>
+
+    <p>Tem certeza que deseja remover o livro <strong><%= book.title %></strong> de <%= book.author %>?</p>
+
+    <form action="/books/delete/<%= book.id %>" method="POST">
+        <button type="submit">Sim, Remover</button>
+    </form>
+
+    <a href="/">⬅️ Cancelar</a>
+</body>
+</html>

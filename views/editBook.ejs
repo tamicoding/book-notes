@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Livro</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <h1>✏️ Editar Livro</h1>
+
+    <form action="/books/edit/<%= book.id %>" method="POST">
+        <label for="title">Título:</label>
+        <input type="text" name="title" id="title" value="<%= book.title %>" required>
+
+        <label for="author">Autor:</label>
+        <input type="text" name="author" id="author" value="<%= book.author %>" required>
+
+        <label for="notes">Notas:</label>
+        <textarea name="notes" id="notes"><%= book.notes %></textarea>
+
+        <button type="submit">Atualizar</button>
+    </form>
+
+    <a href="/">⬅️ Voltar</a>
+</body>
+</html>

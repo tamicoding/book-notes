@@ -6,6 +6,34 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h1>Bem-vinda ao Book Notes!</h1>
+    <header>
+        <h1>📚 Book Notes</h1>
+        <nav>
+            <a href="/books/add">➕ Adicionar Livro</a>
+        </nav>
+    </header>
+
+    <main>
+        <% if (books.length === 0) { %>
+            <p>Nenhum livro adicionado ainda.</p>
+        <% } else { %>
+            <ul class="book-list">
+                <% books.forEach(book => { %>
+                    <li class="book-item">
+                        <div class="book-info">
+                            <strong><%= book.title %></strong> — <%= book.author %>
+                            <% if (book.notes) { %>
+                                <p class="notes"><%= book.notes %></p>
+                            <% } %>
+                        </div>
+                        <div class="book-actions">
+                            <a href="/books/edit/<%= book.id %>" class="btn edit">✏️ Editar</a>
+                            <a href="/books/delete/<%= book.id %>" class="btn delete">🗑️ Remover</a>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </main>
 </body>
 </html>

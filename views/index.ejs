@@ -1,39 +1,62 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Book Notes</title>
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <title>Book Notes</title>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <header>
-        <h1>📚 Book Notes</h1>
-        <nav>
-            <a href="/books/add">➕ Adicionar Livro</a>
-        </nav>
-    </header>
+  <header>
+    <h1>📖 Book Notes</h1>
+    <nav>
+      <a href="/">Início</a> |
+      <a href="/books/add">Adicionar Livro</a>
+    </nav>
+    <hr>
+  </header>
 
-    <main>
-        <% if (books.length === 0) { %>
-            <p>Nenhum livro adicionado ainda.</p>
-        <% } else { %>
-            <ul class="book-list">
-                <% books.forEach(book => { %>
-                    <li class="book-item">
-                        <div class="book-info">
-                            <strong><%= book.title %></strong> — <%= book.author %>
-                            <% if (book.notes) { %>
-                                <p class="notes"><%= book.notes %></p>
-                            <% } %>
-                        </div>
-                        <div class="book-actions">
-                            <a href="/books/edit/<%= book.id %>" class="btn edit">✏️ Editar</a>
-                            <a href="/books/delete/<%= book.id %>" class="btn delete">🗑️ Remover</a>
-                        </div>
-                    </li>
-                <% }) %>
-            </ul>
-        <% } %>
-    </main>
+  <main>
+    <form method="GET" action="/" class="filter-form">
+      <input type="text" name="search" placeholder="Pesquisar por título ou autor" value="<%= search %>">
+      <button type="submit">Buscar</button>
+    </form>
+
+    <div class="sort-links">
+      <a href="/?sort=rating" class="btn-small">Melhores Avaliados</a>
+      <a href="/?sort=date" class="btn-small">Mais Recentes</a>
+    </div>
+
+    <div class="book-grid">
+      <% if (books.length === 0) { %>
+        <p>Nenhum livro encontrado.</p>
+      <% } else { %>
+        <% books.forEach(book => { %>
+          <div class="book-card">
+            <img src="<%= book.cover %>" alt="Capa do livro <%= book.title %>" class="book-cover">
+            <div class="book-info">
+              <strong class="title"><%= book.title %></strong>
+              <em class="author"><%= book.author %></em>
+              <% if (book.notes) { %>
+                <p class="notes"><%= book.notes %></p>
+              <% } %>
+              <p class="rating">Rating: <%= book.rating %>/5</p>
+              <% if (book.read_date) { %>
+                <p class="date">Lido em: <%= book.read_date.toISOString().split('T')[0] %></p>
+              <% } %>
+              <div class="book-actions">
+                <a href="/books/edit/<%= book.id %>" class="btn-small">Editar</a>
+                <a href="/books/delete/<%= book.id %>" class="btn-small delete">Excluir</a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </main>
+
+  <footer>
+    <hr>
+    <p>Feito por Tamiris 💜</p>
+  </footer>
 </body>
 </html>

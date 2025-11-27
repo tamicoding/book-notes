@@ -1,27 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title><%= title %> | Book Notes</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title><%= title || "MyBooks" %></title>
+  <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>📖 Book Notes</h1>
+  <header class="site-header">
+    <a class="brand" href="/">MyBooks</a>
     <nav>
-      <a href="/">Início</a> | 
-      <a href="/books/add">Adicionar Livro</a>
+      <% if (user) { %>
+        <span class="hello">Olá, <strong><%= user.name %></strong></span>
+        <a href="/books/add" class="btn">Adicionar</a>
+        <a href="/logout" class="btn ghost">Sair</a>
+      <% } else { %>
+        <a href="/login" class="btn">Entrar</a>
+        <a href="/register" class="btn ghost">Registrar</a>
+      <% } %>
     </nav>
-    <hr>
   </header>
 
-  <main>
+  <main class="container">
     <%- body %>
   </main>
 
-  <footer>
-    <hr>
-    <p>Feito por Tamiris 💜</p>
+  <footer class="site-footer">
+    <small>© <%= new Date().getFullYear() %> MyBooks</small>
   </footer>
 </body>
 </html>

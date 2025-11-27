@@ -1,151 +1,255 @@
+// index.js — versão FINAL
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
-import bodyParser from "body-parser";
 import path from "path";
-import { fileURLToPath } from "url";
-import axios from "axios";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import expressLayouts from "express-ejs-layouts";
 import pkg from "pg";
+import bcrypt from "bcrypt";
+import fetch from "node-fetch";
+
 const { Pool } = pkg;
-
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
+const __dirname = path.resolve();
 
-// ================== Configurações ==================
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/* ---------------------- POSTGRES ---------------------- */
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: parseInt(process.env.DB_PORT || "5432", 10),
+});
 
+/* ---------------------- VIEW ENGINE ---------------------- */
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(expressLayouts);
+app.set("layout", "layout");
 
-// ================== Conexão com PostgreSQL ==================
-const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "booknotes",
-  password: "REDACTED_DB_PASSWORD",
-  port: 5433
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: true }));
+
+/* ---------------------- SESSION ---------------------- */
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "troque-essa-chave",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  res.locals.title = "MyBooks";
+  next();
 });
 
-// ================== Função para buscar capa ==================
-async function getCover(title, author) {
-  try {
-    const response = await axios.get(
-      `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`
-    );
-    const docs = response.data.docs;
-    if (docs.length > 0 && docs[0].cover_i) {
-      return `https://covers.openlibrary.org/b/id/${docs[0].cover_i}-M.jpg`;
-    } else {
-      return "/images/no-cover.png";
+/* ---------------------- PASSPORT LOCAL ---------------------- */
+passport.use(
+  new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
+    try {
+      const resu = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+      const user = resu.rows[0];
+      if (!user) return done(null, false, { message: "Usuário não encontrado" });
+
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) return done(null, false, { message: "Senha incorreta" });
+
+      return done(null, user);
+    } catch (err) {
+      return done(err);
     }
-  } catch (err) {
-    console.error(err);
-    return "/images/no-cover.png";
-  }
+  })
+);
+
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  const r = await pool.query("SELECT * FROM users WHERE id=$1", [id]);
+  done(null, r.rows[0]);
+});
+
+/* ---------------------- HELPERS ---------------------- */
+function ensureAuth(req, res, next) {
+  if (req.isAuthenticated()) return next();
+  res.redirect("/login");
+}
+function ensureGuest(req, res, next) {
+  if (!req.isAuthenticated()) return next();
+  res.redirect("/");
 }
 
-// ================== ROTAS ==================
+/* -----------------------------------------------------------------------
+   FUNÇÃO DE CAPA — OpenLibrary → Google Books fallback → retorna URL
+   ----------------------------------------------------------------------- */
+async function fetchCoverFromOL(title, author) {
+  const q = `https://openlibrary.org/search.json?title=${encodeURIComponent(
+    title
+  )}&author=${encodeURIComponent(author)}&limit=1`;
 
-// Home / listar livros com filtros
-app.get("/", async (req, res) => {
-  try {
-    let query = "SELECT * FROM books";
-    const params = [];
+  const res = await fetch(q);
+  const data = await res.json();
 
-    // Ordenação
-    if (req.query.sort === "rating") query += " ORDER BY rating DESC";
-    else query += " ORDER BY read_date DESC";
-
-    const result = await pool.query(query, params);
-    const books = await Promise.all(
-      result.rows.map(async (book) => {
-        const cover = await getCover(book.title, book.author);
-        return { ...book, cover };
-      })
-    );
-    res.render("index", { books, search: req.query.search || "" });
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao buscar livros.");
+  if (data.docs && data.docs.length && data.docs[0].cover_i) {
+    return `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-M.jpg`;
   }
+  return null;
+}
+
+async function fetchCoverFromGoogle(title) {
+  const q = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(
+    title
+  )}`;
+  const res = await fetch(q);
+  const data = await res.json();
+
+  const img =
+    data.items?.[0]?.volumeInfo?.imageLinks?.thumbnail ||
+    data.items?.[0]?.volumeInfo?.imageLinks?.smallThumbnail;
+
+  if (img) return img.replace("http://", "https://");
+  return null;
+}
+
+/* -----------------------------------------------------------------------
+   pega capa: salva no BD e retorna cover_url
+   ----------------------------------------------------------------------- */
+async function getAndSaveCover(title, author) {
+  // tenta OpenLibrary
+  let cover = await fetchCoverFromOL(title, author);
+
+  // fallback: Google
+  if (!cover) cover = await fetchCoverFromGoogle(title);
+
+  return cover || null;
+}
+
+/* ---------------------- AUTH ROUTES ---------------------- */
+app.get("/register", ensureGuest, (req, res) => res.render("register", { error: null }));
+app.post("/register", ensureGuest, async (req, res) => {
+  const { name, email, password } = req.body;
+
+  const exists = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
+  if (exists.rows.length) return res.render("register", { error: "Email já existe" });
+
+  const hash = await bcrypt.hash(password, 10);
+  const ins = await pool.query(
+    "INSERT INTO users (name, email, password) VALUES ($1,$2,$3) RETURNING *",
+    [name, email, hash]
+  );
+  req.login(ins.rows[0], () => res.redirect("/"));
 });
 
-// Formulário adicionar
-app.get("/books/add", (req, res) => res.render("addBook", { book: null }));
+app.get("/login", ensureGuest, (req, res) =>
+  res.render("login", { error: null })
+);
 
-// Adicionar livro
-app.post("/books/add", async (req, res) => {
+app.post("/login", ensureGuest, (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (!user) return res.render("login", { error: info.message });
+    req.logIn(user, () => res.redirect("/"));
+  })(req, res, next);
+});
+
+app.get("/logout", (req, res) => req.logout(() => res.redirect("/login")));
+
+/* ---------------------- HOME ---------------------- */
+app.get("/", ensureAuth, async (req, res) => {
+  const books = await pool.query(
+    "SELECT * FROM books WHERE user_id=$1 ORDER BY id DESC",
+    [req.user.id]
+  );
+  res.render("index", { books: books.rows, search: "" });
+});
+
+/* ---------------------- ADD BOOK ---------------------- */
+app.get("/books/add", ensureAuth, (req, res) => res.render("addBook"));
+
+app.post("/books/add", ensureAuth, async (req, res) => {
   const { title, author, notes, rating, read_date } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO books (title, author, notes, rating, read_date) VALUES ($1, $2, $3, $4, $5)",
-      [title, author, notes, rating, read_date]
-    );
-    res.redirect("/");
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao adicionar livro.");
-  }
+
+  const cover_url = await getAndSaveCover(title, author);
+
+  await pool.query(
+    `INSERT INTO books (user_id, title, author, notes, rating, read_date, cover_url)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [req.user.id, title, author, notes || null, rating || null, read_date || null, cover_url]
+  );
+
+  res.redirect("/");
 });
 
-// Formulário editar
-app.get("/books/edit/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    const result = await pool.query("SELECT * FROM books WHERE id=$1", [id]);
-    const book = result.rows[0];
-    if (!book) return res.send("Livro não encontrado!");
-    res.render("editBook", { book });
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao buscar livro para edição.");
-  }
+/* ---------------------- EDIT BOOK ---------------------- */
+app.get("/books/edit/:id", ensureAuth, async (req, res) => {
+  const r = await pool.query(
+    "SELECT * FROM books WHERE id=$1 AND user_id=$2",
+    [req.params.id, req.user.id]
+  );
+  if (!r.rows.length) return res.send("Livro não encontrado.");
+  res.render("editBook", { book: r.rows[0] });
 });
 
-// Salvar edição
-app.post("/books/edit/:id", async (req, res) => {
+app.post("/books/edit/:id", ensureAuth, async (req, res) => {
   const { title, author, notes, rating, read_date } = req.body;
-  const id = req.params.id;
-  try {
-    await pool.query(
-      "UPDATE books SET title=$1, author=$2, notes=$3, rating=$4, read_date=$5 WHERE id=$6",
-      [title, author, notes, rating, read_date, id]
-    );
-    res.redirect("/");
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao editar livro.");
-  }
+
+  let cover_url = await getAndSaveCover(title, author);
+
+  await pool.query(
+    `UPDATE books SET title=$1, author=$2, notes=$3, rating=$4, read_date=$5, cover_url=$6
+     WHERE id=$7 AND user_id=$8`,
+    [
+      title,
+      author,
+      notes || null,
+      rating || null,
+      read_date || null,
+      cover_url,
+      req.params.id,
+      req.user.id,
+    ]
+  );
+
+  res.redirect("/");
 });
 
-// Formulário excluir
-app.get("/books/delete/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    const result = await pool.query("SELECT * FROM books WHERE id=$1", [id]);
-    const book = result.rows[0];
-    if (!book) return res.send("Livro não encontrado!");
-    res.render("deleteBook", { book });
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao buscar livro para exclusão.");
-  }
+/* ---------------------- DELETE BOOK ---------------------- */
+app.get("/books/delete/:id", ensureAuth, async (req, res) => {
+  const r = await pool.query(
+    "SELECT * FROM books WHERE id=$1 AND user_id=$2",
+    [req.params.id, req.user.id]
+  );
+  if (!r.rows.length) return res.send("Livro não encontrado");
+  res.render("deleteBook", { book: r.rows[0] });
 });
 
-// Excluir livro
-app.post("/books/delete/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    await pool.query("DELETE FROM books WHERE id=$1", [id]);
-    res.redirect("/");
-  } catch (err) {
-    console.error(err);
-    res.send("Erro ao remover livro.");
-  }
+app.post("/books/delete/:id", ensureAuth, async (req, res) => {
+  await pool.query("DELETE FROM books WHERE id=$1 AND user_id=$2", [
+    req.params.id,
+    req.user.id,
+  ]);
+  res.redirect("/");
 });
 
-// ================== SERVIDOR ==================
-app.listen(port, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+/* ---------------------- SEARCH ---------------------- */
+app.get("/search", ensureAuth, async (req, res) => {
+  const q = `%${req.query.q?.toLowerCase() || ""}%`;
+  const books = await pool.query(
+    `SELECT * FROM books 
+     WHERE user_id=$1 AND (LOWER(title) LIKE $2 OR LOWER(author) LIKE $2) 
+     ORDER BY id DESC`,
+    [req.user.id, q]
+  );
+  res.render("index", { books: books.rows, search: req.query.q });
 });
+
+/* ---------------------- START ---------------------- */
+app.listen(PORT, () =>
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`)
+);

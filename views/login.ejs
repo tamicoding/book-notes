@@ -1,0 +1,22 @@
+<% title = "Entrar"; %>
+
+<section class="form-card">
+  <h2>Entrar</h2>
+
+  <% if (error) { %>
+    <div class="alert"><%= error %></div>
+  <% } %>
+
+  <form action="/login" method="post" class="book-form">
+    <label>Email</label>
+    <input type="email" name="email" required>
+
+    <label>Senha</label>
+    <input type="password" name="password" required>
+
+    <div class="actions">
+      <button class="btn" type="submit">Entrar</button>
+      <a class="btn ghost" href="/register">Criar conta</a>
+    </div>
+  </form>
+</section>

@@ -1,62 +1,30 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Book Notes</title>
-  <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-  <header>
-    <h1>📖 Book Notes</h1>
-    <nav>
-      <a href="/">Início</a> |
-      <a href="/books/add">Adicionar Livro</a>
-    </nav>
-    <hr>
-  </header>
+<% title = "Meus livros"; %>
 
-  <main>
-    <form method="GET" action="/" class="filter-form">
-      <input type="text" name="search" placeholder="Pesquisar por título ou autor" value="<%= search %>">
-      <button type="submit">Buscar</button>
-    </form>
+<section class="books-grid">
+  <% if (!books || books.length === 0) { %>
+    <div class="empty">Nenhum livro cadastrado.</div>
+  <% } %>
 
-    <div class="sort-links">
-      <a href="/?sort=rating" class="btn-small">Melhores Avaliados</a>
-      <a href="/?sort=date" class="btn-small">Mais Recentes</a>
-    </div>
+  <% books.forEach(book => { %>
+    <article class="card">
+      <div class="card-left">
+        <% if (book.cover_url) { %>
+          <img class="cover" src="<%= book.cover_url %>" alt="Capa">
+        <% } else { %>
+          <div class="cover placeholder"></div>
+        <% } %>
+      </div>
 
-    <div class="book-grid">
-      <% if (books.length === 0) { %>
-        <p>Nenhum livro encontrado.</p>
-      <% } else { %>
-        <% books.forEach(book => { %>
-          <div class="book-card">
-            <img src="<%= book.cover %>" alt="Capa do livro <%= book.title %>" class="book-cover">
-            <div class="book-info">
-              <strong class="title"><%= book.title %></strong>
-              <em class="author"><%= book.author %></em>
-              <% if (book.notes) { %>
-                <p class="notes"><%= book.notes %></p>
-              <% } %>
-              <p class="rating">Rating: <%= book.rating %>/5</p>
-              <% if (book.read_date) { %>
-                <p class="date">Lido em: <%= book.read_date.toISOString().split('T')[0] %></p>
-              <% } %>
-              <div class="book-actions">
-                <a href="/books/edit/<%= book.id %>" class="btn-small">Editar</a>
-                <a href="/books/delete/<%= book.id %>" class="btn-small delete">Excluir</a>
-              </div>
-            </div>
-          </div>
-        <% }) %>
-      <% } %>
-    </div>
-  </main>
+      <div class="card-body">
+        <h3><%= book.title %></h3>
+        <p class="muted">por <%= book.author || '—' %></p>
+        <p class="notes"><%= book.notes || "Sem notas" %></p>
+      </div>
 
-  <footer>
-    <hr>
-    <p>Feito por Tamiris 💜</p>
-  </footer>
-</body>
-</html>
+      <div class="card-actions">
+        <a class="btn small" href="/books/edit/<%= book.id %>">Editar</a>
+        <a class="btn small danger" href="/books/delete/<%= book.id %>">Excluir</a>
+      </div>
+    </article>
+  <% }) %>
+</section>

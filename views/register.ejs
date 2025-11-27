@@ -1,0 +1,25 @@
+<% title = "Registrar"; %>
+
+<section class="form-card">
+  <h2>Criar conta</h2>
+
+  <% if (error) { %>
+    <div class="alert"><%= error %></div>
+  <% } %>
+
+  <form action="/register" method="post" class="book-form">
+    <label>Nome</label>
+    <input type="text" name="name">
+
+    <label>Email</label>
+    <input type="email" name="email" required>
+
+    <label>Senha</label>
+    <input type="password" name="password" required>
+
+    <div class="actions">
+      <button class="btn" type="submit">Registrar</button>
+      <a class="btn ghost" href="/login">Já tenho conta</a>
+    </div>
+  </form>
+</section>

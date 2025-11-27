@@ -1,16 +1,26 @@
-<h2>Editar Livro</h2>
-<form action="/books/edit/<%= book.id %>" method="POST" class="book-form">
-  <label>Título:</label>
-  <input type="text" name="title" value="<%= book.title %>" required>
+<% title = "Editar livro"; %>
 
-  <label>Autor:</label>
-  <input type="text" name="author" value="<%= book.author %>" required>
+<section class="form-card">
+  <h2>Editar: <%= book.title %></h2>
+  <form action="/books/edit/<%= book.id %>" method="post" class="book-form">
+    <label>Título</label>
+    <input name="title" required value="<%= book.title %>">
 
-  <label>Notas:</label>
-  <textarea name="notes"><%= book.notes %></textarea>
+    <label>Autor</label>
+    <input name="author" value="<%= book.author %>">
 
-  <label>Rating:</label>
-  <input type="number" name="rating" min="0" max="5" step="0.1" value="<%= book.rating %>">
+    <label>Notas</label>
+    <textarea name="notes" rows="5"><%= book.notes %></textarea>
 
-  <button type="submit">Salvar</button>
-</form>
+    <label>Nota (0-5)</label>
+    <input type="number" name="rating" min="0" max="5" value="<%= book.rating || '' %>">
+
+    <label>Data de leitura</label>
+    <input type="date" name="read_date" value="<%= book.read_date ? new Date(book.read_date).toISOString().split('T')[0] : '' %>">
+
+    <div class="actions">
+      <button class="btn" type="submit">Atualizar</button>
+      <a class="btn ghost" href="/">Cancelar</a>
+    </div>
+  </form>
+</section>

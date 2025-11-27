@@ -1,4 +1,3 @@
-// index.js — versão FINAL
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,7 +16,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
 
-/* ---------------------- POSTGRES ---------------------- */
+/* Postgres */
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -26,7 +26,8 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT || "5432", 10),
 });
 
-/* ---------------------- VIEW ENGINE ---------------------- */
+/* View engine */
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
@@ -35,7 +36,8 @@ app.set("layout", "layout");
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
-/* ---------------------- SESSION ---------------------- */
+/* Session */
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "troque-essa-chave",
@@ -52,7 +54,8 @@ app.use((req, res, next) => {
   next();
 });
 
-/* ---------------------- PASSPORT LOCAL ---------------------- */
+/* Passport local */
+
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
     try {
@@ -76,7 +79,8 @@ passport.deserializeUser(async (id, done) => {
   done(null, r.rows[0]);
 });
 
-/* ---------------------- HELPERS ---------------------- */
+/* Helpers */
+
 function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.redirect("/login");
@@ -86,9 +90,8 @@ function ensureGuest(req, res, next) {
   res.redirect("/");
 }
 
-/* -----------------------------------------------------------------------
-   FUNÇÃO DE CAPA — OpenLibrary → Google Books fallback → retorna URL
-   ----------------------------------------------------------------------- */
+/* Função de capa, OpenLibrary, Google Books fallback, retorna URL */
+
 async function fetchCoverFromOL(title, author) {
   const q = `https://openlibrary.org/search.json?title=${encodeURIComponent(
     title
@@ -118,9 +121,8 @@ async function fetchCoverFromGoogle(title) {
   return null;
 }
 
-/* -----------------------------------------------------------------------
-   pega capa: salva no BD e retorna cover_url
-   ----------------------------------------------------------------------- */
+/* Pega capa e salva no BD e retorna cover_url */
+
 async function getAndSaveCover(title, author) {
   // tenta OpenLibrary
   let cover = await fetchCoverFromOL(title, author);
@@ -131,7 +133,8 @@ async function getAndSaveCover(title, author) {
   return cover || null;
 }
 
-/* ---------------------- AUTH ROUTES ---------------------- */
+/* Auth routes */
+
 app.get("/register", ensureGuest, (req, res) => res.render("register", { error: null }));
 app.post("/register", ensureGuest, async (req, res) => {
   const { name, email, password } = req.body;
@@ -160,7 +163,8 @@ app.post("/login", ensureGuest, (req, res, next) => {
 
 app.get("/logout", (req, res) => req.logout(() => res.redirect("/login")));
 
-/* ---------------------- HOME ---------------------- */
+/* Home */
+
 app.get("/", ensureAuth, async (req, res) => {
   const books = await pool.query(
     "SELECT * FROM books WHERE user_id=$1 ORDER BY id DESC",
@@ -169,7 +173,8 @@ app.get("/", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: "" });
 });
 
-/* ---------------------- ADD BOOK ---------------------- */
+/* Add books */
+
 app.get("/books/add", ensureAuth, (req, res) => res.render("addBook"));
 
 app.post("/books/add", ensureAuth, async (req, res) => {
@@ -186,7 +191,8 @@ app.post("/books/add", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* ---------------------- EDIT BOOK ---------------------- */
+/* Edit books */
+
 app.get("/books/edit/:id", ensureAuth, async (req, res) => {
   const r = await pool.query(
     "SELECT * FROM books WHERE id=$1 AND user_id=$2",
@@ -219,7 +225,8 @@ app.post("/books/edit/:id", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* ---------------------- DELETE BOOK ---------------------- */
+/* Delete books */
+
 app.get("/books/delete/:id", ensureAuth, async (req, res) => {
   const r = await pool.query(
     "SELECT * FROM books WHERE id=$1 AND user_id=$2",
@@ -237,7 +244,8 @@ app.post("/books/delete/:id", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* ---------------------- SEARCH ---------------------- */
+/* Search */
+
 app.get("/search", ensureAuth, async (req, res) => {
   const q = `%${req.query.q?.toLowerCase() || ""}%`;
   const books = await pool.query(
@@ -249,7 +257,8 @@ app.get("/search", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: req.query.q });
 });
 
-/* ---------------------- START ---------------------- */
+/* Start */
+
 app.listen(PORT, () =>
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`)
 );

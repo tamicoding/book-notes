@@ -6,10 +6,10 @@ As capas são buscadas automaticamente pelas APIs OpenLibrary e Google Books e s
 
 Screenshots
 
-![Home](images/home.png)
-![Login](images/login.png)
-![Register](images/register.png)
-![Add Book](images/addbook.png)
+![Home](assets/home.png)
+![Login](assets/login.png)
+![Add Book](assets/addbook.png)
+![Edit](assets/editbook.png)
 
 Recursos do projeto:
 

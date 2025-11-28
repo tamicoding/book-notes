@@ -3,30 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title><%= title || "MyBooks" %></title>
+  <title><%= title || "Book Notes" %></title>
+
+  <!-- ESSENCIAL: link do CSS -->
   <link rel="stylesheet" href="/style.css" />
 </head>
+
 <body>
+
+  <!-- HEADER COMPLETO -->
   <header class="site-header">
-    <a class="brand" href="/">MyBooks</a>
-    <nav>
-      <% if (user) { %>
+    <div class="header-center">
+      <a class="brand" href="/">Book Notes</a>
+    </div>
+
+    <% if (user) { %>
+      <nav class="header-right">
         <span class="hello">Olá, <strong><%= user.name %></strong></span>
-        <a href="/books/add" class="btn">Adicionar</a>
         <a href="/logout" class="btn ghost">Sair</a>
-      <% } else { %>
+      </nav>
+    <% } else { %>
+      <nav class="header-right">
         <a href="/login" class="btn">Entrar</a>
         <a href="/register" class="btn ghost">Registrar</a>
-      <% } %>
-    </nav>
+      </nav>
+    <% } %>
   </header>
 
+  <!-- CONTEÚDO DAS PÁGINAS -->
   <main class="container">
     <%- body %>
   </main>
 
+  <!-- FOOTER -->
   <footer class="site-footer">
     <small>© <%= new Date().getFullYear() %> MyBooks</small>
   </footer>
+
 </body>
 </html>

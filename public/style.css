@@ -1,5 +1,6 @@
 :root{
   --bg: #0f1724;
+  --bg-dark: #061018; /* fundo sólido mais escuro para header/footer */
   --card: #111827;
   --accent: #7c3aed;
   --muted: #9ca3af;
@@ -9,134 +10,191 @@
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
+/* reset / base */
 *{ box-sizing:border-box; }
+html,body{ height:100%; }
 
+/* body */
 body{
   margin:0;
   min-height:100vh;
-  background:linear-gradient(180deg, #071122 0%, #071730 100%);
+
+  /* background fixado e sem repetição para evitar mudança de cor */
+  background: linear-gradient(180deg, #071122 0%, #071730 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+
   color:#e6eef8;
   -webkit-font-smoothing:antialiased;
-  padding-bottom:60px;
+  padding-bottom: 0;
 }
 
-/* Header */
-
+/* ======================
+   HEADER
+   - sem borda
+   - fundo ligeiramente mais escuro e estável
+====================== */
 .site-header{
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:18px 28px;
-  border-bottom:1px solid rgba(255,255,255,0.03);
-  background:transparent;
+  padding:28px 32px;
+  background: var(--bg-dark);    /* fundo sólido estável */
+  /* removi border-bottom para não ter a linha */
+  /* border-bottom:1px solid rgba(255,255,255,0.06); */ 
   position:sticky;
   top:0;
-  z-index:20;
-  position:relative;
+  z-index:40;
+  /* adiciona leve sombra para separar sutilmente do conteúdo */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
 }
 
-.brand{
-  position:absolute;
-  left:50%;
-  top:60%;
-  transform:translate(-50%, -50%);
+/* CENTRALIZA O LOGO E AFASTA BEM DO TOPO */
+.header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Espaço maior no MyBooks */
+.brand {
   font-weight:700;
   color:var(--accent);
-  font-size:30px;
-  white-space:nowrap;
+  font-size:40px;
   text-decoration:none;
+  letter-spacing: 1.2px;
 }
 
-.site-header nav{
+/* área direita: usuario + sair */
+.header-right, .site-header nav{
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
   display:flex;
-  gap:8px;
+  gap:14px;
   align-items:center;
-  position:absolute;
-  right:28px;
-  top:60%;
-  transform:translateY(-50%);
 }
 
-/* Botões */
-
+/* ======================
+   BOTÕES
+====================== */
 .btn{
-  background:linear-gradient(90deg, rgba(124,58,237,0.12), rgba(124,58,237,0.08));
-  border:1px solid rgba(124,58,237,0.22);
-  padding:8px 12px;
-  border-radius:10px;
+  background:linear-gradient(90deg, rgba(124,58,237,0.18), rgba(124,58,237,0.1));
+  border:1px solid rgba(124,58,237,0.25);
+  padding:8px 14px;
+  border-radius:12px;
   color:var(--accent);
   font-weight:600;
   text-decoration:none;
   cursor:pointer;
-  transition:transform .12s;
+  transition: all .12s;
 }
 .btn:hover{ transform:translateY(-2px); }
 
 .btn.ghost{
   background:transparent;
-  border:1px solid rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
   color:var(--muted);
 }
 
-.btn.small{
-  padding:6px 8px;
-  font-size:13px;
-}
-.btn.danger{
-  background:rgba(239,68,68,0.12);
-  border:1px solid rgba(239,68,68,0.22);
-  color:#ffcccc;
-}
-
-/* Containers e search */
-
+/* ======================
+   CONTAINER
+====================== */
 .container{
   max-width:1100px;
   margin:28px auto;
   padding:0 18px;
 }
 
+main.container {
+  flex: 1;
+  min-height: calc(100vh - 200px);
+}
+
+/* ======================
+   PESQUISA + ADICIONAR
+====================== */
 .top-row{
   display:flex;
-  justify-content:space-between;
+  justify-content:center;
   align-items:center;
   margin-bottom:18px;
+}
+
+.centered-search {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap: 18px;
+  margin: 48px 0 32px;
+  width:100%;
 }
 
 .search-form{
   display:flex;
   gap:8px;
   width:100%;
-  max-width:560px;
+  max-width:720px;
 }
+
 .search-form input{
   flex:1;
-  padding:10px 12px;
-  border-radius:10px;
+  padding:12px 14px;
+  border-radius:12px;
   border:1px solid rgba(255,255,255,0.05);
   background:var(--glass);
   color:inherit;
+  outline:none;
 }
+.search-form input::placeholder { color: rgba(230,238,248,0.6); }
+
+.form-card .actions {
+display: flex;
+  justify-content: center; 
+  margin-top: 16px;
+}
+
+.form-card button,
+.form-card a.btn {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.form-card h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 22px;
+}
+
 .search-form button{
-  padding:10px 14px;
-  border-radius:10px;
+  padding:12px 18px;
+  border-radius:12px;
   border:none;
   cursor:pointer;
   background:var(--accent);
   color:white;
 }
 
-/* Grid de livros */
+.add-btn {
+  margin-left: 14px;
+  white-space: nowrap;
+}
 
+/* ======================
+   GRID DE LIVROS
+====================== */
 .books-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:18px;
+  gap:22px;
   align-items:stretch;
 }
 
-/* Card padronizado */
-
+/* ======================
+   CARD
+====================== */
 .card{
   display:flex;
   flex-direction:column;
@@ -148,8 +206,7 @@ body{
   box-shadow:0 6px 20px rgba(2,6,23,0.6);
 }
 
-/* Capa padronizada */
-
+/* Capa */
 .cover-wrap{
   width:100%;
   height:340px;
@@ -164,14 +221,13 @@ body{
 .cover-wrap img{
   width:100%;
   height:100%;
-  object-fit:contain;      /* mostra a capa inteira */
+  object-fit:contain;
   object-position:center;
   background-color:#071122;
   display:block;
 }
 
-/* Conteúdo Card */
-
+/* Conteúdo */
 .card-body{
   flex:1;
   padding:18px;
@@ -200,8 +256,9 @@ body{
   -webkit-line-clamp:4;
 }
 
-/* Ações */
-
+/* ======================
+   CARD FOOTER
+====================== */
 .card-actions{
   padding:14px 18px;
   display:flex;
@@ -209,8 +266,9 @@ body{
   gap:8px;
 }
 
-/* Formulários */
-
+/* ======================
+   FORM
+====================== */
 .form-card{
   background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   padding:24px;
@@ -243,8 +301,9 @@ body{
   color:inherit;
 }
 
-/* Mensagens */
-
+/* ======================
+   ALERTAS
+====================== */
 .alert{
   background:rgba(239,68,68,0.08);
   padding:8px;
@@ -253,16 +312,19 @@ body{
   border:1px solid rgba(239,68,68,0.12);
 }
 
-/* Footer centralizado */
-
+/* ======================
+   FOOTER
+   - fundo mais escuro e sem borda visível
+====================== */
 .site-footer{
-position: static;        
-  padding: 10px 16px;
-  background: transparent;
-  border-top: 1px solid rgba(255,255,255,0.02);
+  padding: 14px 16px;
+  background: var(--bg-dark);
+  border-top: none; /* sem borda */
   text-align: center;
   color: var(--muted);
-  margin-top: 40px; 
+  margin-top: auto;
+  box-shadow: 0 -6px 18px rgba(0,0,0,0.35);
+  position: static;
 }
 
 .site-footer small{
@@ -271,15 +333,16 @@ position: static;
   text-align:center;
 }
 
-/* Responsivo*/
-
+/* ======================
+   RESPONSIVO
+====================== */
 @media (max-width:900px){
   .card { min-height:380px; }
   .cover-wrap { height:300px; }
 }
 
 @media (max-width:720px){
-  .brand{ font-size:24px; }
+  .brand{ font-size:30px; }
   .site-header{ justify-content:space-between; }
 
   .brand{
@@ -309,21 +372,106 @@ position: static;
 @media (max-width:420px){
   .books-grid{ grid-template-columns:1fr; }
   .form-card{ margin:28px 12px; padding:16px; }
-  .brand{ font-size:20px; }
+  .brand{ font-size:22px; }
 }
 
-/* Estrelas rating */
-
-.rating {
-  margin: 0;
-  padding: 0;
-}
-
+/* ======================
+   ESTRELAS
+====================== */
+.rating { margin: 0; padding: 0; }
 .stars {
   font-size: 18px;
   letter-spacing: 1px;
-color: var(--accent);
+  color: var(--accent);
   text-shadow: 0 0 6px rgba(124, 58, 237, 0.55);
 }
 
+/* ======================
+   FILTRO LATERAL
+====================== */
+.date-filter {
+  position: fixed;
+  right: 20px;
+  top: 120px;
+  width: 220px;
+  background: rgba(255,255,255,0.03);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  z-index: 40;
+}
 
+.date-filter h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.year-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 8px;
+  border-radius: 8px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.months {
+  margin-left: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.hidden { display: none; }
+
+.month-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  padding-left: 6px;
+  transition: 0.12s;
+}
+.month-link:hover { color: var(--accent); transform: translateX(6px); }
+
+/* no mobile */
+@media (max-width: 900px) {
+  .date-filter { display: none; }
+}
+
+/* ======================
+   GOOGLE BUTTON
+====================== */
+.google-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 600;
+  justify-content: center;
+  margin-top: 12px;
+  border: none;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.25);
+  width: fit-content; 
+  margin-left: auto;
+  margin-right: auto;
+}
+.google-btn img { width: 20px; height: 20px; }
+.separator {
+  text-align: center;
+  margin: 16px 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  opacity: .9;
+}

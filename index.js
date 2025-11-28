@@ -6,6 +6,7 @@ import path from "path";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import expressLayouts from "express-ejs-layouts";
 import pkg from "pg";
 import bcrypt from "bcrypt";
@@ -17,7 +18,6 @@ const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
 
 /* Postgres */
-
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -27,7 +27,6 @@ const pool = new Pool({
 });
 
 /* View engine */
-
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
@@ -37,7 +36,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
 /* Session */
-
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "troque-essa-chave",
@@ -55,13 +53,14 @@ app.use((req, res, next) => {
 });
 
 /* Passport local */
-
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
     try {
       const resu = await pool.query("SELECT * FROM users WHERE email=$1", [email]);
       const user = resu.rows[0];
       if (!user) return done(null, false, { message: "Usuário não encontrado" });
+
+      if (!user.password) return done(null, false, { message: "Conta sem senha (use Google)" });
 
       const match = await bcrypt.compare(password, user.password);
       if (!match) return done(null, false, { message: "Senha incorreta" });
@@ -73,6 +72,48 @@ passport.use(
   })
 );
 
+/* Google Strategy */
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email = profile.emails?.[0]?.value;
+        const googleId = profile.id;
+
+        // procura por google_id ou email
+        let r = await pool.query(
+          "SELECT * FROM users WHERE google_id=$1 OR email=$2",
+          [googleId, email]
+        );
+
+        if (r.rows.length === 0) {
+          // cria usuário
+          const ins = await pool.query(
+            "INSERT INTO users (name, email, google_id) VALUES ($1,$2,$3) RETURNING *",
+            [profile.displayName, email, googleId]
+          );
+          return done(null, ins.rows[0]);
+        }
+
+        // se existe mas sem google_id, atualiza
+        const user = r.rows[0];
+        if (!user.google_id) {
+          await pool.query("UPDATE users SET google_id=$1 WHERE id=$2", [googleId, user.id]);
+        }
+
+        return done(null, user);
+      } catch (err) {
+        return done(err, null);
+      }
+    }
+  )
+);
+
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
   const r = await pool.query("SELECT * FROM users WHERE id=$1", [id]);
@@ -80,7 +121,6 @@ passport.deserializeUser(async (id, done) => {
 });
 
 /* Helpers */
-
 function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.redirect("/login");
@@ -90,8 +130,7 @@ function ensureGuest(req, res, next) {
   res.redirect("/");
 }
 
-/* Função de capa, OpenLibrary, Google Books fallback, retorna URL */
-
+/* Funções de capa (OpenLibrary / Google) */
 async function fetchCoverFromOL(title, author) {
   const q = `https://openlibrary.org/search.json?title=${encodeURIComponent(
     title
@@ -107,9 +146,7 @@ async function fetchCoverFromOL(title, author) {
 }
 
 async function fetchCoverFromGoogle(title) {
-  const q = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(
-    title
-  )}`;
+  const q = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(title)}`;
   const res = await fetch(q);
   const data = await res.json();
 
@@ -121,20 +158,28 @@ async function fetchCoverFromGoogle(title) {
   return null;
 }
 
-/* Pega capa e salva no BD e retorna cover_url */
-
 async function getAndSaveCover(title, author) {
-  // tenta OpenLibrary
   let cover = await fetchCoverFromOL(title, author);
-
-  // fallback: Google
   if (!cover) cover = await fetchCoverFromGoogle(title);
-
   return cover || null;
 }
 
-/* Auth routes */
+/* UTIL: pega dates agrupadas (usado em várias rotas) */
+async function getUserDates(userId) {
+  const dates = await pool.query(
+    `SELECT 
+        EXTRACT(YEAR FROM read_date) AS year,
+        EXTRACT(MONTH FROM read_date) AS month
+      FROM books
+      WHERE user_id=$1 AND read_date IS NOT NULL
+      GROUP BY year, month
+      ORDER BY year DESC, month DESC`,
+    [userId]
+  );
+  return dates.rows || [];
+}
 
+/* Auth routes */
 app.get("/register", ensureGuest, (req, res) => res.render("register", { error: null }));
 app.post("/register", ensureGuest, async (req, res) => {
   const { name, email, password } = req.body;
@@ -150,31 +195,73 @@ app.post("/register", ensureGuest, async (req, res) => {
   req.login(ins.rows[0], () => res.redirect("/"));
 });
 
-app.get("/login", ensureGuest, (req, res) =>
-  res.render("login", { error: null })
-);
+app.get("/login", ensureGuest, (req, res) => res.render("login", { error: null }));
 
 app.post("/login", ensureGuest, (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
-    if (!user) return res.render("login", { error: info.message });
+    if (!user) return res.render("login", { error: info?.message });
     req.logIn(user, () => res.redirect("/"));
   })(req, res, next);
 });
 
 app.get("/logout", (req, res) => req.logout(() => res.redirect("/login")));
 
-/* Home */
+/* Google Auth Routes */
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  (req, res) => {
+    res.redirect("/");
+  }
+);
+
+/* Home */
 app.get("/", ensureAuth, async (req, res) => {
   const books = await pool.query(
     "SELECT * FROM books WHERE user_id=$1 ORDER BY id DESC",
     [req.user.id]
   );
-  res.render("index", { books: books.rows, search: "" });
+
+  const dates = await getUserDates(req.user.id);
+  res.render("index", { books: books.rows, search: "", dates });
+});
+
+/* Filter por data (ano + mês) */
+app.get("/filter/date/:year/:month", ensureAuth, async (req, res) => {
+  const { year, month } = req.params;
+
+  const books = await pool.query(
+    `SELECT * FROM books 
+      WHERE user_id=$1 
+      AND EXTRACT(YEAR FROM read_date) = $2
+      AND EXTRACT(MONTH FROM read_date) = $3
+      ORDER BY id DESC`,
+    [req.user.id, year, month]
+  );
+
+  const dates = await getUserDates(req.user.id);
+  res.render("index", { books: books.rows, search: "", dates });
+});
+
+/* filtrar só por ano (todos do ano) */
+app.get("/filter/date/:year", ensureAuth, async (req, res) => {
+  const { year } = req.params;
+
+  const books = await pool.query(
+    `SELECT * FROM books 
+      WHERE user_id=$1 
+      AND EXTRACT(YEAR FROM read_date) = $2
+      ORDER BY id DESC`,
+    [req.user.id, year]
+  );
+
+  const dates = await getUserDates(req.user.id);
+  res.render("index", { books: books.rows, search: "", dates });
 });
 
 /* Add books */
-
 app.get("/books/add", ensureAuth, (req, res) => res.render("addBook"));
 
 app.post("/books/add", ensureAuth, async (req, res) => {
@@ -192,12 +279,11 @@ app.post("/books/add", ensureAuth, async (req, res) => {
 });
 
 /* Edit books */
-
 app.get("/books/edit/:id", ensureAuth, async (req, res) => {
-  const r = await pool.query(
-    "SELECT * FROM books WHERE id=$1 AND user_id=$2",
-    [req.params.id, req.user.id]
-  );
+  const r = await pool.query("SELECT * FROM books WHERE id=$1 AND user_id=$2", [
+    req.params.id,
+    req.user.id,
+  ]);
   if (!r.rows.length) return res.send("Livro não encontrado.");
   res.render("editBook", { book: r.rows[0] });
 });
@@ -210,42 +296,28 @@ app.post("/books/edit/:id", ensureAuth, async (req, res) => {
   await pool.query(
     `UPDATE books SET title=$1, author=$2, notes=$3, rating=$4, read_date=$5, cover_url=$6
      WHERE id=$7 AND user_id=$8`,
-    [
-      title,
-      author,
-      notes || null,
-      rating || null,
-      read_date || null,
-      cover_url,
-      req.params.id,
-      req.user.id,
-    ]
+    [title, author, notes || null, rating || null, read_date || null, cover_url, req.params.id, req.user.id]
   );
 
   res.redirect("/");
 });
 
 /* Delete books */
-
 app.get("/books/delete/:id", ensureAuth, async (req, res) => {
-  const r = await pool.query(
-    "SELECT * FROM books WHERE id=$1 AND user_id=$2",
-    [req.params.id, req.user.id]
-  );
+  const r = await pool.query("SELECT * FROM books WHERE id=$1 AND user_id=$2", [
+    req.params.id,
+    req.user.id,
+  ]);
   if (!r.rows.length) return res.send("Livro não encontrado");
   res.render("deleteBook", { book: r.rows[0] });
 });
 
 app.post("/books/delete/:id", ensureAuth, async (req, res) => {
-  await pool.query("DELETE FROM books WHERE id=$1 AND user_id=$2", [
-    req.params.id,
-    req.user.id,
-  ]);
+  await pool.query("DELETE FROM books WHERE id=$1 AND user_id=$2", [req.params.id, req.user.id]);
   res.redirect("/");
 });
 
 /* Search */
-
 app.get("/search", ensureAuth, async (req, res) => {
   const q = `%${req.query.q?.toLowerCase() || ""}%`;
   const books = await pool.query(
@@ -254,11 +326,10 @@ app.get("/search", ensureAuth, async (req, res) => {
      ORDER BY id DESC`,
     [req.user.id, q]
   );
-  res.render("index", { books: books.rows, search: req.query.q });
+
+  const dates = await getUserDates(req.user.id);
+  res.render("index", { books: books.rows, search: req.query.q, dates });
 });
 
 /* Start */
-
-app.listen(PORT, () =>
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));

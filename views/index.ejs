@@ -7,17 +7,39 @@
 
   <% books.forEach(book => { %>
     <article class="card">
-      <div class="card-left">
+
+      <div class="cover-wrap">
         <% if (book.cover_url) { %>
-          <img class="cover" src="<%= book.cover_url %>" alt="Capa">
+          <img src="<%= book.cover_url %>" alt="Capa de <%= book.title %>">
         <% } else { %>
-          <div class="cover placeholder"></div>
+          <img src="/images/placeholder.png" alt="Sem capa">
         <% } %>
       </div>
 
       <div class="card-body">
         <h3><%= book.title %></h3>
         <p class="muted">por <%= book.author || '—' %></p>
+
+        <% if (book.rating) { %>
+          <p class="rating">
+            <% 
+              const fullStars = '★★★★★';
+              const emptyStars = '☆☆☆☆☆';
+            %>
+
+            <span class="stars">
+              <%= fullStars.slice(0, book.rating) + emptyStars.slice(book.rating) %>
+            </span>
+          </p>
+        <% } %>
+
+        <% if (book.read_date) { %>
+          <p class="muted">
+            Lido em:
+            <strong><%= new Date(book.read_date).toLocaleDateString("pt-BR") %></strong>
+          </p>
+        <% } %>
+
         <p class="notes"><%= book.notes || "Sem notas" %></p>
       </div>
 
@@ -25,6 +47,7 @@
         <a class="btn small" href="/books/edit/<%= book.id %>">Editar</a>
         <a class="btn small danger" href="/books/delete/<%= book.id %>">Excluir</a>
       </div>
+
     </article>
   <% }) %>
 </section>

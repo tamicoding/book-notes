@@ -2,7 +2,7 @@
 <% // `dates` chega do middleware em `index.js` e é usada para popular o filtro lateral %>
 <% let datesList = (typeof dates !== 'undefined' && dates) ? dates : []; %>
 
-<!-- HOME: barra do usuário (apresentada apenas na view principal mobile) -->
+<!-- Home: barra do usuário (mobile only) -->
 
 <% if (user) { %>
   <div class="home-userbar mobile-only">
@@ -22,10 +22,7 @@
 </div>
 
 <!-- FILTRO LATERAL -->
-<!-- Estrutura:
-   - anos (botão) -> meses (botão) -> dias (links)
-   - as datas são montadas em `index.js` e passadas como `dates`
- -->
+
 <aside class="date-filter" id="dateFilter">
   <div class="date-filter-head">
     <h3>Filtrar por data</h3>
@@ -92,7 +89,7 @@
   <% }) %>
 
   <div class="mobile-only" style="margin-top:14px;">
-    <!-- Botão de logout visível apenas em mobile dentro do drawer -->
+    <!-- Botão de logout mobile only dentro do drawer -->
     <a href="/logout" class="btn ghost full">Sair</a>
   </div>
 </aside>
@@ -103,7 +100,6 @@
     if(!el) return;
     el.classList.toggle("hidden");
 
-    // fechou o ano? fecha os dias abertos também
     if(el.classList.contains("hidden")){
       document.querySelectorAll(`[id^="month-${year}-"]`).forEach(m => m.classList.add("hidden"));
     }

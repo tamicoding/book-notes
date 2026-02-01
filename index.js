@@ -1,10 +1,3 @@
-// Arquivo principal do servidor Express.
-// Responsabilidades:
-// - Configurar variáveis de ambiente
-// - Inicializar Express + EJS
-// - Configurar sessão e Passport (auth local + Google)
-// - Rotas principais (auth, CRUD de livros, filtros, busca)
-// - Funções utilitárias para buscar capas e datas do usuário
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
@@ -26,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
 const forgotLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // 5 tentativas por 15min por IP
+  max: 5, 
 });
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -54,7 +47,6 @@ async function sendResetEmail(to, link) {
 
 
 /* ===== View engine =====
-   Configura o EJS como template engine e o layout padrão.
  */
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -62,15 +54,12 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 
 /* ===== Middlewares estáticos + parser =====
-   - `express.static` serve arquivos em `public/`
-   - `express.urlencoded` processa formulários POST
  */
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
 /* ===== Sessão =====
    Configura o `express-session` para manter sessão do usuário.
-   Em produção, troque `secret` por uma variável segura.
  */
 app.use(
   session({
@@ -88,8 +77,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Carrega datas do filtro para o layout (usado no menu lateral do mobile).
-// Assim o filtro funciona também nas páginas de editar/excluir, não só na Home.
+// Carrega datas do filtro para o layout
 app.use(async (req, res, next) => {
   try {
     if (req.user) {
@@ -108,7 +96,6 @@ app.use(async (req, res, next) => {
     }
     next();
   } catch (err) {
-    // Se der erro, não quebra a página — só desliga o filtro.
     res.locals.dates = [];
     next();
   }
@@ -116,8 +103,6 @@ app.use(async (req, res, next) => {
 
 /* ===== Passport (Local Strategy) =====
    Autenticação via email/senha armazenada no banco.
-   - procura usuário por email
-   - compara senha com `bcrypt`
  */
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
@@ -139,8 +124,8 @@ passport.use(
 );
 
 /* ===== Passport (Google OAuth) =====
-   Integração com Google OAuth2. Procura usuário por `google_id` ou
-   por `email`. Se usuário não existir, cria novo registro.
+   Integração com Google OAuth2. Procura usuario por google_id ou
+   por email. Se usuário não existir, cria novo registro.
  */
 passport.use(
   new GoogleStrategy(
@@ -154,14 +139,13 @@ passport.use(
         const email = profile.emails?.[0]?.value;
         const googleId = profile.id;
 
-        // procura por google_id ou email
         let r = await pool.query(
           "SELECT * FROM users WHERE google_id=$1 OR email=$2",
           [googleId, email]
         );
 
         if (r.rows.length === 0) {
-          // cria usuário
+
           const ins = await pool.query(
             "INSERT INTO users (name, email, google_id) VALUES ($1,$2,$3) RETURNING *",
             [profile.displayName, email, googleId]
@@ -169,7 +153,6 @@ passport.use(
           return done(null, ins.rows[0]);
         }
 
-        // se existe mas sem google_id, atualiza
         const user = r.rows[0];
         if (!user.google_id) {
           await pool.query("UPDATE users SET google_id=$1 WHERE id=$2", [googleId, user.id]);
@@ -192,10 +175,9 @@ passport.deserializeUser(async (id, done) => {
   done(null, r.rows[0]);
 });
 
-/* Helpers */
 /* ===== Helpers de rota =====
-   - `ensureAuth`: protege rotas que exigem login
-   - `ensureGuest`: redireciona usuário logado para a home
+   ensureAuth: protege rotas que exigem login
+   ensureGuest: redireciona usuário logado para a home
  */
 function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
@@ -206,11 +188,10 @@ function ensureGuest(req, res, next) {
   res.redirect("/");
 }
 
-/* Funções de capa (OpenLibrary / Google) */
 /* ===== Funções para buscar capas =====
-   - `fetchCoverFromOL`: tenta encontrar capa no OpenLibrary
-   - `fetchCoverFromGoogle`: fallback para Google Books
-   - `getAndSaveCover`: tenta ambas e retorna URL ou null
+   fetchCoverFromOL: tenta encontrar capa no OpenLibrary
+   fetchCoverFromGoogle: fallback para Google Books
+   getAndSaveCover: tenta ambas e retorna URL ou null
  */
 async function fetchCoverFromOL(title, author) {
   const q = `https://openlibrary.org/search.json?title=${encodeURIComponent(
@@ -341,7 +322,7 @@ app.post("/forgot-password", async (req, res) => {
       [tokenHash, expires, userId]
     );
 
-    // Monta link de reset (usa BASE_URL se disponível)
+    // Monta link de reset 
     const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
     const resetLink = `${String(baseUrl).replace(/\/$/, '')}/reset-password/${token}`;
 
@@ -504,7 +485,7 @@ app.get("/filter/date/:year/:month", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: "", dates });
 });
 
-/* filtrar só por ano (todos do ano) */
+/* filtrar só por ano */
 app.get("/filter/date/:year", ensureAuth, async (req, res) => {
   const { year } = req.params;
 

@@ -1,12 +1,9 @@
 // Conexão com o banco de dados (PostgreSQL).
-// Exporta um `Pool` reutilizável para queries em todo o app.
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Se `DATABASE_URL` estiver presente (ex.: Heroku), usa-a com SSL condicional.
-// Caso contrário, usa variáveis individuais (DB_USER, DB_HOST, etc.).
 export const pool = new Pool(
   process.env.DATABASE_URL
     ? {

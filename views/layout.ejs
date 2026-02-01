@@ -29,10 +29,10 @@
     <button class="icon-btn mobile-only" id="menuToggle" aria-label="Abrir menu">☰</button>
   </header>
 
-  <!-- Overlay: usado para drawer/filtro móvel -->
+  <!-- Overlay: drawer/filtro móvel -->
   <div class="overlay" id="overlay"></div>
 
-  <!-- Drawer: menu móvel (quando usuário não está logado) -->
+  <!-- Drawer: menu móvel -->
   <% if (!user) { %>
     <aside class="drawer" id="authDrawer" aria-hidden="true">
       <div class="drawer-head">
@@ -47,7 +47,7 @@
     </aside>
   <% } %>
 
-  <!-- Pequeño script para abrir/fechar drawer e filtro -->
+  <!-- Pequeno script para abrir/fechar drawer e filtro -->
   <script>
     (function(){
       const btn = document.getElementById("menuToggle");
@@ -90,13 +90,12 @@
     })();
   </script>
 
-  <!-- CONTEÚDO principal: cada view é renderizada dentro de `layout` -->
+  <!-- Conteudo principal: cada view é renderizada dentro de layout -->
   <main class="container">
     <%- body %>
   </main>
 
   <!-- FOOTER -->
-  <!-- FOOTER: crédito do projeto -->
   <footer class="site-footer">
     <small>© Book Notes — criado por Tamiris Reis</small>
   </footer>

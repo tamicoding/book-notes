@@ -5,39 +5,100 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title><%= title || "Book Notes" %></title>
 
-  <!-- ESSENCIAL: link do CSS -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap');
+  </style>
+
   <link rel="stylesheet" href="/style.css" />
 </head>
 
-<body>
-
-  <!-- HEADER COMPLETO -->
+<body data-logged="<%= !!user %>">
+  <!-- HEADER: marca, usuário e botão mobile -->
   <header class="site-header">
-    <div class="header-center">
-      <a class="brand" href="/">Book Notes</a>
-    </div>
+    <a class="brand" href="/">Book Notes</a>
 
     <% if (user) { %>
-      <nav class="header-right">
-        <span class="hello">Olá, <strong><%= user.name %></strong></span>
-        <a href="/logout" class="btn ghost">Sair</a>
-      </nav>
-    <% } else { %>
-      <nav class="header-right">
-        <a href="/login" class="btn">Entrar</a>
-        <a href="/register" class="btn ghost">Registrar</a>
-      </nav>
+      <!-- Desktop: Olá + Sair na direita -->
+      <div class="header-user desktop-only">
+        <span>Olá, <strong><%= user.name %></strong></span>
+        <a href="/logout" class="btn ghost small">Sair</a>
+      </div>
     <% } %>
+
+    <!-- Mobile: Hambúrguer na direita -->
+    <button class="icon-btn mobile-only" id="menuToggle" aria-label="Abrir menu">☰</button>
   </header>
 
-  <!-- CONTEÚDO DAS PÁGINAS -->
+  <!-- Overlay: usado para drawer/filtro móvel -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Drawer: menu móvel (quando usuário não está logado) -->
+  <% if (!user) { %>
+    <aside class="drawer" id="authDrawer" aria-hidden="true">
+      <div class="drawer-head">
+        <span class="drawer-title">Menu</span>
+        <button class="icon-btn" id="drawerClose" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <a href="/login" class="btn primary full">Entrar</a>
+        <a href="/register" class="btn ghost full">Registrar</a>
+      </div>
+    </aside>
+  <% } %>
+
+  <!-- Pequeño script para abrir/fechar drawer e filtro -->
+  <script>
+    (function(){
+      const btn = document.getElementById("menuToggle");
+      const overlay = document.getElementById("overlay");
+      const authDrawer = document.getElementById("authDrawer");
+      const closeBtn = document.getElementById("drawerClose");
+
+      function closeAll(){
+        overlay?.classList.remove("open");
+        authDrawer?.classList.remove("open");
+        const filter = document.getElementById("dateFilter");
+        filter?.classList.remove("open");
+        document.body.classList.remove("no-scroll");
+      }
+
+      function openAuth(){
+        if(!authDrawer) return;
+        overlay.classList.add("open");
+        authDrawer.classList.add("open");
+        document.body.classList.add("no-scroll");
+      }
+
+      function openFilter(){
+        const filter = document.getElementById("dateFilter");
+        if(!filter){ openAuth(); return; }
+        overlay.classList.add("open");
+        filter.classList.add("open");
+        document.body.classList.add("no-scroll");
+      }
+
+      btn?.addEventListener("click", () => {
+        const isLogged = document.body.dataset.logged === 'true';
+        if(isLogged) openFilter();
+        else openAuth();
+      });
+
+      overlay?.addEventListener("click", closeAll);
+      closeBtn?.addEventListener("click", closeAll);
+      document.addEventListener("keydown", (e) => e.key === "Escape" && closeAll());
+    })();
+  </script>
+
+  <!-- CONTEÚDO principal: cada view é renderizada dentro de `layout` -->
   <main class="container">
     <%- body %>
   </main>
 
   <!-- FOOTER -->
+  <!-- FOOTER: crédito do projeto -->
   <footer class="site-footer">
-    <small>© <%= new Date().getFullYear() %> MyBooks</small>
+    <small>© Book Notes — criado por Tamiris Reis</small>
   </footer>
 
 </body>

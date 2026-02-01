@@ -1,5 +1,6 @@
 <% title = "Registrar"; %>
 
+<!-- Formulário de registro: cria um usuário com nome/email/senha -->
 <section class="form-card">
   <h2>Criar conta</h2>
 
@@ -25,8 +26,10 @@
 
   <div class="separator">ou</div>
 
-  <a href="/auth/google" class="google-btn" aria-label="Registrar com Google">
-    <img src="https://cdn.simpleicons.org/google/000000" alt="Google">
-    Registrar com Google
+  <!-- Registro via Google (não cria senha) -->
+   <a href="/auth/google" class="google-btn" aria-label="Entrar com Google">
+    <!-- CDN SimpleIcons: cor preta (000000). Troca a cor se quiser -->
+    <img src="https://cdn.simpleicons.org/google/000000" alt="Google" class="google-icon-img">
+     Entrar com Google
   </a>
 </section>

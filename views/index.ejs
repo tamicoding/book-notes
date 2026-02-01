@@ -1,58 +1,128 @@
 <% title = "Meus livros"; %>
-
+<% // `dates` chega do middleware em `index.js` e é usada para popular o filtro lateral %>
 <% let datesList = (typeof dates !== 'undefined' && dates) ? dates : []; %>
 
-<!-- top row: pesquisa centralizada + botão adicionar -->
-<div class="top-row centered-search">
+<!-- HOME: barra do usuário (apresentada apenas na view principal mobile) -->
+
+<% if (user) { %>
+  <div class="home-userbar mobile-only">
+    <div class="home-userbar-center">Olá, <strong><%= user.name %></strong></div>
+    <a class="btn ghost small home-userbar-right" href="/logout">Sair</a>
+  </div>
+<% } %>
+
+<!-- Topo: busca + botão de adicionar livro -->
+<div class="top-row">
   <form action="/search" class="search-form" method="get">
     <input name="q" placeholder="Pesquisar título ou autor" value="<%= search || '' %>">
-    <button type="submit">Buscar</button>
+    <button type="submit" class="btn primary">Buscar</button>
   </form>
 
-  <a href="/books/add" class="btn add-btn">Adicionar</a>
+  <a href="/books/add" class="btn primary add-book">Adicionar livro</a>
 </div>
 
 <!-- FILTRO LATERAL -->
-<aside class="date-filter">
-  <h3>Filtrar por data</h3>
+<!-- Estrutura:
+   - anos (botão) -> meses (botão) -> dias (links)
+   - as datas são montadas em `index.js` e passadas como `dates`
+ -->
+<aside class="date-filter" id="dateFilter">
+  <div class="date-filter-head">
+    <h3>Filtrar por data</h3>
+    <button class="icon-btn mobile-only" type="button" onclick="closeFilterDrawer()">✕</button>
+  </div>
 
-  <% 
-    const grouped = {};
-    (datesList || []).forEach(d => {
-      if (!d.year) return;
+  <% // map: {year: {month: [day,day...]}}
+    const map = {};
+    datesList.forEach(d => {
       const y = String(parseInt(d.year));
-      const m = parseInt(d.month);
-      if (!grouped[y]) grouped[y] = [];
-      if (!grouped[y].includes(m)) grouped[y].push(m);
+      const mNum = parseInt(d.month);
+      const dayNum = parseInt(d.day);
+
+      if (!y || Number.isNaN(mNum) || Number.isNaN(dayNum)) return;
+
+      const m = String(mNum).padStart(2,'0');
+      const day = String(dayNum).padStart(2,'0');
+
+      if(!map[y]) map[y] = {};
+      if(!map[y][m]) map[y][m] = [];
+      if(!map[y][m].includes(day)) map[y][m].push(day);
     });
 
-    Object.keys(grouped).forEach(y => grouped[y].sort((a,b)=>b-a));
+    const years = Object.keys(map).sort((a,b)=>Number(b)-Number(a));
+    years.forEach(y=>{
+      Object.keys(map[y]).forEach(m=>{
+        map[y][m].sort((a,b)=>Number(b)-Number(a));
+      });
+    });
   %>
 
-  <% if (Object.keys(grouped).length === 0) { %>
+  <% if (years.length === 0) { %>
     <div class="muted">Nenhuma data registrada</div>
   <% } %>
 
-  <% Object.keys(grouped).forEach(year => { %>
+  <% years.forEach(year => { 
+      const months = Object.keys(map[year]).sort((a,b)=>Number(b)-Number(a));
+  %>
     <div class="year-block">
-      <button class="year-btn" onclick="toggleYear('<%= year %>')">
+      <button class="year-btn" type="button" onclick="toggleYear('<%= year %>')">
         <%= year %>
       </button>
 
       <div id="year-<%= year %>" class="months hidden">
-        <% grouped[year].forEach(month => { %>
-          <a href="/filter/date/<%= year %>/<%= month %>" class="month-link">
-            <%= new Date(2020, month-1, 1).toLocaleString('pt-BR', { month: 'long' }) %>
-          </a>
+        <% months.forEach(month => { %>
+          <button class="month-btn" type="button" onclick="toggleMonth('<%= year %>','<%= month %>')">
+            <%= new Date(2020, Number(month)-1, 1).toLocaleString('pt-BR', { month: 'long' }) %>
+          </button>
+
+          <div id="month-<%= year %>-<%= month %>" class="days hidden">
+            <% map[year][month].forEach(day => { %>
+              <a class="day-link" href="/filter/date/<%= year %>/<%= Number(month) %>/<%= Number(day) %>">
+                <%= day %>/<%= month %>/<%= year %>
+              </a>
+            <% }) %>
+          </div>
         <% }) %>
 
-        <a href="/filter/date/<%= year %>" class="month-link" style="margin-top:8px; font-weight:600;">
+        <a href="/filter/date/<%= year %>" class="month-link month-all">
           Ver todos de <%= year %>
         </a>
       </div>
     </div>
   <% }) %>
+
+  <div class="mobile-only" style="margin-top:14px;">
+    <!-- Botão de logout visível apenas em mobile dentro do drawer -->
+    <a href="/logout" class="btn ghost full">Sair</a>
+  </div>
 </aside>
+
+<script>
+  function toggleYear(year){
+    const el = document.getElementById("year-" + year);
+    if(!el) return;
+    el.classList.toggle("hidden");
+
+    // fechou o ano? fecha os dias abertos também
+    if(el.classList.contains("hidden")){
+      document.querySelectorAll(`[id^="month-${year}-"]`).forEach(m => m.classList.add("hidden"));
+    }
+  }
+
+  function toggleMonth(year, month){
+    const el = document.getElementById(`month-${year}-${month}`);
+    if(!el) return;
+    el.classList.toggle("hidden");
+  }
+
+  function closeFilterDrawer(){
+    const filter = document.getElementById("dateFilter");
+    const overlay = document.getElementById("overlay");
+    filter?.classList.remove("open");
+    overlay?.classList.remove("open");
+    document.body.classList.remove("no-scroll");
+  }
+</script>
 
 <section class="books-grid">
   <% if (!books || books.length === 0) { %>
@@ -76,7 +146,7 @@
 
         <% if (book.rating) { %>
           <p class="rating">
-            <% 
+            <%
               const fullStars = '★★★★★';
               const emptyStars = '☆☆☆☆☆';
             %>
@@ -106,9 +176,10 @@
 </section>
 
 <script>
+  // Abre/fecha os meses dentro de um ano (desktop e mobile)
   function toggleYear(year){
     const el = document.getElementById("year-" + year);
-    if (!el) return;
+    if(!el) return;
     el.classList.toggle("hidden");
   }
 </script>

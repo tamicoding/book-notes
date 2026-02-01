@@ -81,6 +81,27 @@ SESSION_SECRET=uma_senha_segura
 
 (O login com Google é opcional)
 
+Google OAuth – Login com Google
+
+O projeto inclui autenticação social usando Passport Google OAuth 2.0.
+
+Como ativar:
+
+Criar um projeto no Google Cloud Console
+
+Criar credenciais OAuth (Client ID e Secret)
+
+Configurar o Redirect URI:
+
+http://localhost:3000/auth/google/callback
+
+
+Inserir as chaves no arquivo .env:
+
+GOOGLE_CLIENT_ID=seu_id
+GOOGLE_CLIENT_SECRET=sua_chave
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
 5. Iniciar o servidor
 npm run dev ou node index.js
 
@@ -97,15 +118,6 @@ views/layout.ejs, index.ejs, login.ejs, register.ejs, addBook.ejs, editBook.ejs,
 
 Principais habilidades desenvolvidas nesse projeto:
 
-Autenticação e sessões em Node.js
-Integração com APIs externas
-Criptografia de dados sensíveis
-Manipulação de banco relacional
-Criação de interface com EJS
-Responsividade completa
-Organização e modularização de código
-Utilização de variáveis de ambiente
-Fluxo básico de deploy e Git
-Status do projeto
+Autenticação e sessões em Node.js, Integração com APIs externas, Criptografia de dados sensíveis, Manipulação de banco relacional, Criação de interface com EJS,, Responsividade completa, Organização e modularização de código, Utilização de variáveis de ambiente, Fluxo básico de deploy e Git, Status do projeto.
 
 Em desenvolvimento contínuo, funcionalidades principais prontas e estáveis.

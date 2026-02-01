@@ -1,11 +1,14 @@
 <% title = "Excluir livro"; %>
 
+<!-- Confirmação de exclusão: mostra o título e pede confirmação -->
 <section class="form-card">
   <h2>Excluir livro</h2>
   <p>Tem certeza que deseja excluir <strong><%= book.title %></strong>?</p>
 
-  <form action="/books/delete/<%= book.id %>" method="post">
-    <button class="btn danger" type="submit">Sim, excluir</button>
-    <a class="btn ghost" href="/">Cancelar</a>
+  <form action="\1" method="post" class="book-form">
+    <div class="actions">
+      <button class="btn danger" type="submit">Sim, excluir</button>
+      <a class="btn ghost" href="/">Cancelar</a>
+    </div>
   </form>
 </section>

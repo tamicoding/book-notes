@@ -1,5 +1,6 @@
 <% title = "Editar livro"; %>
 
+<!-- Formulário para editar um livro existente. `book` vem do servidor. -->
 <section class="form-card">
   <h2>Editar: <%= book.title %></h2>
   <form action="/books/edit/<%= book.id %>" method="post" class="book-form">
@@ -19,7 +20,7 @@
     <input type="date" name="read_date" value="<%= book.read_date ? new Date(book.read_date).toISOString().split('T')[0] : '' %>">
 
     <div class="actions">
-      <button class="btn" type="submit">Atualizar</button>
+      <button class="btn primary" type="submit">Atualizar</button>
       <a class="btn ghost" href="/">Cancelar</a>
     </div>
   </form>

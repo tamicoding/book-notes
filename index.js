@@ -1,41 +1,77 @@
+// Arquivo principal do servidor Express.
+// Responsabilidades:
+// - Configurar variáveis de ambiente
+// - Inicializar Express + EJS
+// - Configurar sessão e Passport (auth local + Google)
+// - Rotas principais (auth, CRUD de livros, filtros, busca)
+// - Funções utilitárias para buscar capas e datas do usuário
 import dotenv from "dotenv";
 dotenv.config();
-
 import express from "express";
 import path from "path";
+import { randomBytes, createHash } from 'crypto';
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import expressLayouts from "express-ejs-layouts";
-import pkg from "pg";
 import bcrypt from "bcrypt";
 import fetch from "node-fetch";
+import nodemailer from "nodemailer";
+import { pool } from './db.js';
+import rateLimit from "express-rate-limit";
 
-const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 3000;
 const __dirname = path.resolve();
-
-/* Postgres */
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || "5432", 10),
+const forgotLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // 5 tentativas por 15min por IP
+});
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || undefined,
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
-/* View engine */
+async function sendResetEmail(to, link) {
+  await transporter.sendMail({
+    from: process.env.MAIL_FROM,
+    to,
+    subject: "Redefinição de senha - Book Notes",
+    html: `
+      <p>Você pediu para redefinir sua senha.</p>
+      <p>Clique no link abaixo (válido por 1 hora):</p>
+      <p><a href="${link}">Redefinir senha</a></p>
+      <p>Se não foi você, ignore este email.</p>
+    `,
+  });
+}
+
+
+/* ===== View engine =====
+   Configura o EJS como template engine e o layout padrão.
+ */
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
 app.set("layout", "layout");
 
+/* ===== Middlewares estáticos + parser =====
+   - `express.static` serve arquivos em `public/`
+   - `express.urlencoded` processa formulários POST
+ */
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
-/* Session */
+/* ===== Sessão =====
+   Configura o `express-session` para manter sessão do usuário.
+   Em produção, troque `secret` por uma variável segura.
+ */
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "troque-essa-chave",
@@ -52,7 +88,37 @@ app.use((req, res, next) => {
   next();
 });
 
-/* Passport local */
+// Carrega datas do filtro para o layout (usado no menu lateral do mobile).
+// Assim o filtro funciona também nas páginas de editar/excluir, não só na Home.
+app.use(async (req, res, next) => {
+  try {
+    if (req.user) {
+      const datesRes = await pool.query(
+        `SELECT DISTINCT
+           EXTRACT(YEAR FROM read_date) AS year,
+           EXTRACT(MONTH FROM read_date) AS month
+         FROM books
+         WHERE user_id=$1 AND read_date IS NOT NULL
+         ORDER BY year DESC, month DESC`,
+        [req.user.id]
+      );
+      res.locals.dates = datesRes.rows;
+    } else {
+      res.locals.dates = [];
+    }
+    next();
+  } catch (err) {
+    // Se der erro, não quebra a página — só desliga o filtro.
+    res.locals.dates = [];
+    next();
+  }
+});
+
+/* ===== Passport (Local Strategy) =====
+   Autenticação via email/senha armazenada no banco.
+   - procura usuário por email
+   - compara senha com `bcrypt`
+ */
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
     try {
@@ -72,7 +138,10 @@ passport.use(
   })
 );
 
-/* Google Strategy */
+/* ===== Passport (Google OAuth) =====
+   Integração com Google OAuth2. Procura usuário por `google_id` ou
+   por `email`. Se usuário não existir, cria novo registro.
+ */
 passport.use(
   new GoogleStrategy(
     {
@@ -114,6 +183,9 @@ passport.use(
   )
 );
 
+/* ===== Passport: serialização =====
+   Controla como o usuário fica armazenado na sessão.
+ */
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
   const r = await pool.query("SELECT * FROM users WHERE id=$1", [id]);
@@ -121,6 +193,10 @@ passport.deserializeUser(async (id, done) => {
 });
 
 /* Helpers */
+/* ===== Helpers de rota =====
+   - `ensureAuth`: protege rotas que exigem login
+   - `ensureGuest`: redireciona usuário logado para a home
+ */
 function ensureAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.redirect("/login");
@@ -131,6 +207,11 @@ function ensureGuest(req, res, next) {
 }
 
 /* Funções de capa (OpenLibrary / Google) */
+/* ===== Funções para buscar capas =====
+   - `fetchCoverFromOL`: tenta encontrar capa no OpenLibrary
+   - `fetchCoverFromGoogle`: fallback para Google Books
+   - `getAndSaveCover`: tenta ambas e retorna URL ou null
+ */
 async function fetchCoverFromOL(title, author) {
   const q = `https://openlibrary.org/search.json?title=${encodeURIComponent(
     title
@@ -164,22 +245,27 @@ async function getAndSaveCover(title, author) {
   return cover || null;
 }
 
-/* UTIL: pega dates agrupadas (usado em várias rotas) */
+/* ===== Função utilitária: datas do usuário =====
+   Retorna ano/mês/dia únicos das leituras para popular o filtro.
+ */
 async function getUserDates(userId) {
   const dates = await pool.query(
-    `SELECT 
-        EXTRACT(YEAR FROM read_date) AS year,
-        EXTRACT(MONTH FROM read_date) AS month
-      FROM books
-      WHERE user_id=$1 AND read_date IS NOT NULL
-      GROUP BY year, month
-      ORDER BY year DESC, month DESC`,
+    `
+    SELECT DISTINCT
+      EXTRACT(YEAR FROM read_date)  AS year,
+      EXTRACT(MONTH FROM read_date) AS month,
+      EXTRACT(DAY FROM read_date)   AS day
+    FROM books
+    WHERE user_id=$1 AND read_date IS NOT NULL
+    ORDER BY year DESC, month DESC, day DESC
+    `,
     [userId]
   );
+
   return dates.rows || [];
 }
 
-/* Auth routes */
+/* ===== Rotas de autenticação (register/login/logout) ===== */
 app.get("/register", ensureGuest, (req, res) => res.render("register", { error: null }));
 app.post("/register", ensureGuest, async (req, res) => {
   const { name, email, password } = req.body;
@@ -195,7 +281,10 @@ app.post("/register", ensureGuest, async (req, res) => {
   req.login(ins.rows[0], () => res.redirect("/"));
 });
 
-app.get("/login", ensureGuest, (req, res) => res.render("login", { error: null }));
+app.get("/login", ensureGuest, (req, res) => {
+  const message = req.query.reset ? "Senha redefinida com sucesso. Faça login." : null;
+  res.render("login", { error: null, message });
+});
 
 app.post("/login", ensureGuest, (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
@@ -206,7 +295,152 @@ app.post("/login", ensureGuest, (req, res, next) => {
 
 app.get("/logout", (req, res) => req.logout(() => res.redirect("/login")));
 
-/* Google Auth Routes */
+/* ===== Esqueci a senha =====
+   - GET: renderiza o formulário
+   - POST: verifica se o email existe e, em ambiente de teste,
+     gera um token e mostra o link no terminal (não persiste).
+ */
+app.get("/forgot-password", (req, res) => {
+  res.render("forgot-password", { message: null, error: null });
+});
+
+// Envia (gera) link de reset - por enquanto mostra no terminal
+app.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.render("forgot-password", {
+        message: null,
+        error: "Digite um email válido."
+      });
+    }
+
+    const userResult = await pool.query(
+      "SELECT id FROM users WHERE email = $1",
+      [email]
+    );
+
+    // Segurança: sempre responde igual, mesmo se email não existir
+    if (!userResult.rows.length) {
+      return res.render("forgot-password", {
+        message: "Se o email existir, vamos enviar um link de redefinição.",
+        error: null
+      });
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // gera token (enviado por email) e armazena apenas o hash (SHA-256) no banco
+    const token = randomBytes(32).toString("hex");
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await pool.query(
+      "UPDATE users SET reset_token=$1, reset_token_expires=$2 WHERE id=$3",
+      [tokenHash, expires, userId]
+    );
+
+    // Monta link de reset (usa BASE_URL se disponível)
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    const resetLink = `${String(baseUrl).replace(/\/$/, '')}/reset-password/${token}`;
+
+    // Tenta enviar por email; em caso de falha, cai para o log (fallback)
+    let mailSent = false;
+    try {
+      await sendResetEmail(email, resetLink);
+      mailSent = true;
+    } catch (err) {
+      console.error("Erro ao enviar email de reset:", err);
+      console.log("RESET LINK:", resetLink);
+      mailSent = false;
+    }
+
+    const message = mailSent
+      ? "Se o email existir, enviamos um link de redefinição. Verifique sua caixa de entrada." 
+      : "Se o email existir, tentamos enviar o link, mas houve um erro no envio. Verifique o terminal (ambiente de teste) ou tente novamente.";
+
+    return res.render("forgot-password", {
+      message,
+      error: null
+    });
+  } catch (err) {
+    console.error(err);
+    return res.render("forgot-password", {
+      message: null,
+      error: "Deu um erro. Tenta de novo."
+    });
+  }
+});
+
+/* ===== Reset de senha (abrir link + salvar nova senha) ===== */
+app.get("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const tokenHash = createHash('sha256').update(String(token)).digest('hex');
+
+    const user = await pool.query(
+      `
+      SELECT id
+      FROM users
+      WHERE reset_token = $1
+        AND reset_token_expires > NOW()
+      `,
+      [tokenHash]
+    );
+
+    if (!user.rows.length) {
+      return res.send("Link inválido ou expirado.");
+    }
+
+    return res.render("reset-password", { token, error: null });
+  } catch (err) {
+    console.error(err);
+    return res.send("Erro ao abrir o link. Tente novamente.");
+  }
+});
+
+app.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.render("reset-password", { token, error: "Senha muito curta (mínimo 6 caracteres)." });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render("reset-password", { token, error: "As senhas não conferem." });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const tokenHash = createHash('sha256').update(String(token)).digest('hex');
+
+    const updated = await pool.query(
+      `
+      UPDATE users
+      SET password = $1,
+          reset_token = NULL,
+          reset_token_expires = NULL
+      WHERE reset_token = $2
+        AND reset_token_expires > NOW()
+      RETURNING id
+      `,
+      [passwordHash, tokenHash]
+    );
+
+    if (!updated.rows.length) {
+      return res.render("reset-password", { token, error: "Token inválido ou expirado." });
+    }
+
+    return res.redirect("/login?reset=1");
+  } catch (err) {
+    console.error(err);
+    return res.render("reset-password", { token: req.params.token, error: "Erro ao redefinir senha." });
+  }
+});
+
+/* ===== Rotas Google OAuth ===== */
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get(
@@ -217,7 +451,9 @@ app.get(
   }
 );
 
-/* Home */
+/* ===== Home =====
+   Lista livros do usuário e renderiza a view `index`.
+ */
 app.get("/", ensureAuth, async (req, res) => {
   const books = await pool.query(
     "SELECT * FROM books WHERE user_id=$1 ORDER BY id DESC",
@@ -228,7 +464,30 @@ app.get("/", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: "", dates });
 });
 
-/* Filter por data (ano + mês) */
+/* ===== Filtros por data =====
+   Rotas para filtrar livros por ano/mês/dia.
+ */
+
+app.get("/filter/date/:year/:month/:day", ensureAuth, async (req, res) => {
+  const { year, month, day } = req.params;
+
+  const books = await pool.query(
+    `
+    SELECT * FROM books
+    WHERE user_id=$1
+      AND read_date IS NOT NULL
+      AND EXTRACT(YEAR FROM read_date) = $2
+      AND EXTRACT(MONTH FROM read_date) = $3
+      AND EXTRACT(DAY FROM read_date) = $4
+    ORDER BY read_date DESC
+    `,
+    [req.user.id, year, month, day]
+  );
+
+  const dates = await getUserDates(req.user.id);
+  res.render("index", { books: books.rows, search: "", dates });
+});
+
 app.get("/filter/date/:year/:month", ensureAuth, async (req, res) => {
   const { year, month } = req.params;
 
@@ -261,7 +520,7 @@ app.get("/filter/date/:year", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: "", dates });
 });
 
-/* Add books */
+/* ===== CRUD: Adicionar livros ===== */
 app.get("/books/add", ensureAuth, (req, res) => res.render("addBook"));
 
 app.post("/books/add", ensureAuth, async (req, res) => {
@@ -278,7 +537,7 @@ app.post("/books/add", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* Edit books */
+/* ===== CRUD: Editar livros ===== */
 app.get("/books/edit/:id", ensureAuth, async (req, res) => {
   const r = await pool.query("SELECT * FROM books WHERE id=$1 AND user_id=$2", [
     req.params.id,
@@ -302,7 +561,7 @@ app.post("/books/edit/:id", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* Delete books */
+/* ===== CRUD: Excluir livros ===== */
 app.get("/books/delete/:id", ensureAuth, async (req, res) => {
   const r = await pool.query("SELECT * FROM books WHERE id=$1 AND user_id=$2", [
     req.params.id,
@@ -317,7 +576,9 @@ app.post("/books/delete/:id", ensureAuth, async (req, res) => {
   res.redirect("/");
 });
 
-/* Search */
+/* ===== Busca =====
+   Pesquisa por título ou autor (case-insensitive)
+ */
 app.get("/search", ensureAuth, async (req, res) => {
   const q = `%${req.query.q?.toLowerCase() || ""}%`;
   const books = await pool.query(
@@ -331,5 +592,5 @@ app.get("/search", ensureAuth, async (req, res) => {
   res.render("index", { books: books.rows, search: req.query.q, dates });
 });
 
-/* Start */
+/* ===== Start server ===== */
 app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));

@@ -1,7 +1,14 @@
 <% title = "Entrar"; %>
 
+<!-- Formulário de login local. Exibe erro se `error` estiver definido. -->
 <section class="form-card">
   <h2>Entrar</h2>
+
+  <% if (message) { %>
+    <div class="alert" style="background: rgba(56,189,248,0.08); color: #bef0ff; border-color: rgba(56,189,248,0.12);">
+      <%= message %>
+    </div>
+  <% } %>
 
   <% if (error) { %>
     <div class="alert"><%= error %></div>
@@ -13,6 +20,7 @@
 
     <label>Senha</label>
     <input type="password" name="password" required>
+    <a href="/forgot-password" class="muted-link">Esqueci minha senha</a>
 
     <div class="actions">
       <button class="btn" type="submit">Entrar</button>
@@ -20,11 +28,13 @@
     </div>
   </form>
 
+
   <div class="separator">ou</div>
 
+  <!-- Login via Google OAuth -->
   <a href="/auth/google" class="google-btn" aria-label="Entrar com Google">
     <!-- CDN SimpleIcons: cor preta (000000). Troca a cor se quiser -->
-    <img src="https://cdn.simpleicons.org/google/000000" alt="Google">
-    Entrar com Google
+    <img src="https://cdn.simpleicons.org/google/000000" alt="Google" class="google-icon-img">
+     Entrar com Google
   </a>
 </section>

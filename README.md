@@ -1,123 +1,103 @@
 BookNotes
 
-Aplicação web para organização de livros lidos.
-Permite registrar usuários, fazer login, adicionar livros, editar, excluir, visualizar notas e pesquisar.
-As capas são buscadas automaticamente pelas APIs OpenLibrary e Google Books e salvas no banco para carregamento rápido.
+BookNotes é uma aplicação web full-stack para registro de livros lidos, anotações pessoais e avaliações. O projeto possui autenticação de usuários, CRUD completo e persistência de dados em PostgreSQL hospedado na nuvem.
 
-Screenshots
+Deploy em produção: https://book-notes-vvs0.onrender.com
 
-![Home](assets/home.png)
-![Login](assets/login.png)
-![Add Book](assets/addbook.png)
-![Edit](assets/editbook.png)
+Funcionalidades
 
-Recursos do projeto:
+Cadastro e autenticação de usuários (email e senha)
 
-Autenticação completa (registro, login, logout)
-Criptografia de senha com bcrypt
-Capas automáticas usando OpenLibrary + Google Books
-Salvamento de capa no banco (cover_url)
-CRUD completo de livros
-Layout com EJS e express-ejs-layouts
-Pesquisa por título e autor
-Interface responsiva
-Sessões com express-session
-Arquitetura simples e organizada
-Tecnologias utilizadas
+Login com Google (OAuth 2.0)
+
+Criação, edição, listagem e exclusão de livros
+
+Anotações pessoais por livro
+
+Avaliação de livros
+
+Recuperação de senha por email
+
+Persistência de dados em banco PostgreSQL
+
+Tecnologias Utilizadas
+Backend
+
 Node.js
-Express
+
+Express.js
+
 EJS
-express-ejs-layouts
-PostgreSQL (pg)
-Passport (Local Strategy)
-bcrypt
-node-fetch
-dotenv
 
-Como rodar o projeto:
+Passport.js (Local Strategy e Google OAuth)
 
-1. Clonar o repositório
-git clone https://github.com/seu-usuario/booknotes.git
-cd booknotes
+Express-session
 
-2. Instalar dependências
+Bcrypt
+
+Nodemailer
+
+Banco de Dados
+
+PostgreSQL
+
+Neon (Postgres Serverless)
+
+Deploy
+
+Render (aplicação)
+
+Neon (banco de dados)
+
+Como rodar o projeto localmente
+Pré-requisitos
+
+Node.js (v18 ou superior)
+
+PostgreSQL
+
+Instalação
+git clone https://github.com/seu-usuario/book-notes.git
+cd book-notes
 npm install
+Configuração
 
-3. Criar o banco de dados
+Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
 
-No PostgreSQL:
-
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  name VARCHAR(255),
-  email VARCHAR(255) UNIQUE,
-  password TEXT,
-  google_id VARCHAR(255),
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE books (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  title VARCHAR(255) NOT NULL,
-  author VARCHAR(255),
-  notes TEXT,
-  rating INTEGER,
-  read_date DATE,
-  cover_url TEXT,
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
-4. Criar o arquivo .env na raiz
 PORT=3000
-
 DB_USER=postgres
 DB_HOST=localhost
 DB_NAME=booknotes
 DB_PASSWORD=sua_senha
-DB_PORT=suaporta
-
-SESSION_SECRET=uma_senha_segura
-
-(O login com Google é opcional)
-
-Google OAuth – Login com Google
-
-O projeto inclui autenticação social usando Passport Google OAuth 2.0.
-
-Como ativar:
-
-Criar um projeto no Google Cloud Console
-
-Criar credenciais OAuth (Client ID e Secret)
-
-Configurar o Redirect URI:
-
-http://localhost:3000/auth/google/callback
-
-
-Inserir as chaves no arquivo .env:
-
-GOOGLE_CLIENT_ID=seu_id
-GOOGLE_CLIENT_SECRET=sua_chave
+DB_PORT=5432
+SESSION_SECRET=sua_chave_secreta
+GOOGLE_CLIENT_ID=seu_client_id
+GOOGLE_CLIENT_SECRET=seu_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+NODE_ENV=development
+Execução
+npm run dev
 
-5. Iniciar o servidor
-npm run dev ou node index.js
+A aplicação estará disponível em http://localhost:3000
 
-Acesse:
+Deploy
 
-http://localhost:3000
+A aplicação está hospedada em produção utilizando Render e Neon:
 
-Estrutura do projeto
+https://book-notes-vvs0.onrender.com
 
-index.js,
-package.json,
-public/style.css,
-views/layout.ejs, index.ejs, login.ejs, register.ejs, addBook.ejs, editBook.ejs, deleteBook.ejs
+Melhorias Futuras
 
-Principais habilidades desenvolvidas nesse projeto:
+Paginação de livros
 
-Autenticação e sessões em Node.js, Integração com APIs externas, Criptografia de dados sensíveis, Manipulação de banco relacional, Criação de interface com EJS,, Responsividade completa, Organização e modularização de código, Utilização de variáveis de ambiente, Fluxo básico de deploy e Git, Status do projeto.
+Categorias e tags
 
-Em desenvolvimento contínuo, funcionalidades principais prontas e estáveis.
+Estatísticas de leitura
+
+Melhorias de interface
+
+Autoria
+
+Projeto desenvolvido por Tamiris, estudante de programação em transição de carreira, com foco em JavaScript, Node.js e desenvolvimento web full-stack.
+
+Projeto desenvolvido para fins de estudo e portfólio.

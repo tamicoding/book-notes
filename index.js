@@ -40,12 +40,12 @@ if (mailConfigured) {
     } : undefined,
   });
 } else {
-  logger.warn('SMTP not configured; email sending disabled. Set SMTP_HOST and MAIL_FROM in env.');
+  console.warn('SMTP not configured; email sending disabled. Set SMTP_HOST and MAIL_FROM in env.');
 }
 
 async function sendResetEmail(to, link) {
   if (!transporter) {
-    // Fail fast so caller can handle (we'll log and show fallback message there).
+
     throw new Error('SMTP not configured');
   }
 

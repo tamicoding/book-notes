@@ -346,10 +346,19 @@ app.post("/forgot-password", async (req, res) => {
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
-    await pool.query(
-      "UPDATE users SET reset_token=$1, reset_token_expires=$2 WHERE id=$3",
-      [tokenHash, expires, userId]
-    );
+    // Log de depuração para entender falhas no Neon
+    logger.info('Preparing to update reset_token for user', { userId });
+    try {
+      const updRes = await pool.query(
+        "UPDATE users SET reset_token=$1, reset_token_expires=$2 WHERE id=$3",
+        [tokenHash, expires, userId]
+      );
+      logger.info('Reset token updated', { userId, rowCount: updRes.rowCount });
+    } catch (dbErr) {
+      logger.error('DB error updating reset_token', { userId, error: dbErr && dbErr.message ? dbErr.message : dbErr });
+      console.error('DB error updating reset_token:', dbErr);
+      return res.render('forgot-password', { message: null, error: 'Erro interno. Tente novamente mais tarde.' });
+    }
 
     // Monta link de reset 
     const baseUrl = process.env.BASE_URL || `https://book-notes-vvs0.onrender.com`;

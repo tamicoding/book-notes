@@ -13,9 +13,11 @@ import fetch from "node-fetch";
 import nodemailer from "nodemailer";
 import { pool } from './db.js';
 import rateLimit from "express-rate-limit";
+import { fileURLToPath } from "url";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve();
 const forgotLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -574,4 +576,4 @@ app.get("/search", ensureAuth, async (req, res) => {
 });
 
 /* ===== Start server ===== */
-app.listen(PORT, () => console.log(`🚀 Servidor rodando em http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));

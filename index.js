@@ -11,6 +11,8 @@ import expressLayouts from "express-ejs-layouts";
 import bcrypt from "bcrypt";
 import fetch from "node-fetch";
 import nodemailer from "nodemailer";
+import fs from "fs";
+import winston from "winston";
 import { pool } from './db.js';
 import rateLimit from "express-rate-limit";
 import { fileURLToPath } from "url";
@@ -46,6 +48,31 @@ async function sendResetEmail(to, link) {
     `,
   });
 }
+
+// Logger (winston) — Console em produção (compatível com Render); arquivos apenas em dev
+const isProd = process.env.NODE_ENV === 'production';
+const logDir = path.join(__dirname, "logs");
+if (!isProd) {
+  try { if (!fs.existsSync(logDir)) fs.mkdirSync(logDir); } catch (e) { /* ignore */ }
+}
+
+const transportsArr = [];
+
+if (!isProd) {
+  transportsArr.push(new winston.transports.File({ filename: path.join(logDir, 'error.log'), level: 'error' }));
+  transportsArr.push(new winston.transports.File({ filename: path.join(logDir, 'combined.log') }));
+}
+
+transportsArr.push(new winston.transports.Console({ format: winston.format.simple() }));
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: transportsArr,
+});
 
 
 /* ===== View engine =====
@@ -325,7 +352,7 @@ app.post("/forgot-password", async (req, res) => {
     );
 
     // Monta link de reset 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    const baseUrl = process.env.BASE_URL || `https://book-notes-vvs0.onrender.com`;
     const resetLink = `${String(baseUrl).replace(/\/$/, '')}/reset-password/${token}`;
 
     // Tenta enviar por email; em caso de falha, cai para o log (fallback)
@@ -333,15 +360,18 @@ app.post("/forgot-password", async (req, res) => {
     try {
       await sendResetEmail(email, resetLink);
       mailSent = true;
+      logger.info('Reset email sent', { email, resetLink });
     } catch (err) {
+      // registra o erro em arquivo e mantém fallback no console para dev
+      logger.error('Erro ao enviar email de reset', { email, resetLink, error: err && err.message ? err.message : err });
       console.error("Erro ao enviar email de reset:", err);
       console.log("RESET LINK:", resetLink);
       mailSent = false;
     }
 
     const message = mailSent
-      ? "Se o email existir, enviamos um link de redefinição. Verifique sua caixa de entrada." 
-      : "Se o email existir, tentamos enviar o link, mas houve um erro no envio. Verifique o terminal (ambiente de teste) ou tente novamente.";
+     ? "Se o email existir, enviamos um link de redefinição. Verifique sua caixa de entrada."
+     : "Se o email existir, tentamos enviar o link, mas houve um erro no envio. Tente novamente mais tarde.";
 
     return res.render("forgot-password", {
       message,

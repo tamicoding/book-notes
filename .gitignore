@@ -1,12 +1,16 @@
+# dependencies
 node_modules/
-npm-debug.log
 
+# environment variables
 .env
 
+# logs
+*.log
+
+# OS files
 .DS_Store
 Thumbs.db
 
-*.log
-
-# environment files
-.env
+# build / cache (future-proof)
+dist/
+build/

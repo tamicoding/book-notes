@@ -21,29 +21,16 @@ export function createTransporter() {
   return nodemailer.createTransport({
     host,
     port,
-    secure, // true normalmente só para porta 465
+    secure, 
+
     auth: { user, pass },
+
+    // força STARTTLS quando secure=false
+    requireTLS: !secure,
+
+    // evita travamento
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
   });
-}
-
-export async function sendResetEmail(toEmail, resetLink) {
-  const transporter = createTransporter();
-
-  const from = process.env.MAIL_FROM || "BookNotes <no-reply@booknotes>";
-
-  const info = await transporter.sendMail({
-    from,
-    to: toEmail,
-    subject: "Redefinição de senha - BookNotes",
-    text: `Você solicitou a redefinição de senha. Abra este link:\n\n${resetLink}\n\nSe você não solicitou, ignore este email.`,
-    html: `
-      <p>Você solicitou a redefinição de senha.</p>
-      <p><a href="${resetLink}">Clique aqui para redefinir sua senha</a></p>
-      <p>Ou copie e cole no navegador:</p>
-      <p>${resetLink}</p>
-      <p>Se você não solicitou, ignore este email.</p>
-    `,
-  });
-
-  return info;
 }

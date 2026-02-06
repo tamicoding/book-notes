@@ -350,7 +350,11 @@ app.post("/forgot-password", async (req, res) => {
       logger.info('Reset email sent', { email, resetLink });
     } catch (err) {
       // registra o erro em arquivo e mantém fallback no console para dev
-      logger.error('Erro ao enviar email de reset', { email, resetLink, error: err && err.message ? err.message : err });
+      logger.error("Erro ao enviar email de reset", {
+        email,
+        error: err && err.message ? err.message : err,
+        ...(process.env.NODE_ENV !== "production" ? { resetLink } : {}),
+      });
       console.error("Erro ao enviar email de reset:", err);
       console.log("RESET LINK:", resetLink);
       mailSent = false;

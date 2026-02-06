@@ -10,7 +10,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import expressLayouts from "express-ejs-layouts";
 import bcrypt from "bcrypt";
 import fetch from "node-fetch";
-import nodemailer from "nodemailer";
+import { sendResetEmail } from "./mailer.js";
 import fs from "fs";
 import winston from "winston";
 import { pool } from './db.js';
@@ -25,44 +25,7 @@ const forgotLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5, 
 });
-// Configure transporter only if SMTP settings are present. This avoids
-// nodemailer attempting to connect to localhost:587 when no config is provided.
-const mailConfigured = Boolean(process.env.SMTP_HOST && process.env.MAIL_FROM);
-let transporter = null;
-if (mailConfigured) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined,
-    secure: process.env.SMTP_SECURE === "true",
-    auth: process.env.SMTP_USER ? {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    } : undefined,
-  });
-} else {
-  console.warn('SMTP not configured; email sending disabled. Set SMTP_HOST and MAIL_FROM in env.');
-}
-
-async function sendResetEmail(to, link) {
-  if (!transporter) {
-
-    throw new Error('SMTP not configured');
-  }
-
-  const info = await transporter.sendMail({
-    from: process.env.MAIL_FROM,
-    to,
-    subject: "Redefinição de senha - Book Notes",
-    html: `
-      <p>Você pediu para redefinir sua senha.</p>
-      <p>Clique no link abaixo (válido por 1 hora):</p>
-      <p><a href="${link}">Redefinir senha</a></p>
-      <p>Se não foi você, ignore este email.</p>
-    `,
-  });
-
-  return info;
-}
+// Email sending handled by `mailer.js` (sendResetEmail)
 
 // Logger (winston) — Console em produção (compatível com Render); arquivos apenas em dev
 const isProd = process.env.NODE_ENV === 'production';

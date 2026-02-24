@@ -1,4 +1,4 @@
-## 🇺🇸 English
+🇺🇸 English
 
 # BookNotes
 
@@ -7,10 +7,9 @@ The project was built with a focus on development best practices, user authentic
 
 The main goal of this project is to demonstrate skills in JavaScript, Node.js, Express, relational databases, and authentication, serving as both a study and portfolio project.
 
-Production deployment:  
-https://book-notes-vvs0.onrender.com
+## Demo
 
----
+Live version: https://book-notes-vvs0.onrender.com
 
 ## Features
 
@@ -23,8 +22,6 @@ https://book-notes-vvs0.onrender.com
 - Authenticated sessions  
 - Data persistence using PostgreSQL  
 
----
-
 ## Password Recovery
 
 The application implements a secure password recovery flow via email.  
@@ -35,7 +32,6 @@ Passwords are securely stored using bcrypt hashing.
 
 Emails are sent via SMTP using Nodemailer, including handling for authentication failures and differences between local and production environments.
 
----
 
 ## Backend Technologies
 
@@ -47,28 +43,20 @@ Emails are sent via SMTP using Nodemailer, including handling for authentication
 - Bcrypt  
 - Nodemailer  
 
----
-
 ## Database
 
 - PostgreSQL  
 - Neon (serverless PostgreSQL)  
-
----
 
 ## Authentication
 
 - Email and password  
 - Google OAuth 2.0  
 
----
-
 ## Deployment
 
 - Render (application hosting)  
 - Neon (database hosting)  
-
----
 
 ## Architecture and Concepts Applied
 
@@ -80,8 +68,6 @@ Emails are sent via SMTP using Nodemailer, including handling for authentication
 - Relational database design with PostgreSQL  
 - Production deployment using cloud services  
 
----
-
 ## Running the Project Locally
 
 ### Prerequisites
@@ -90,19 +76,14 @@ Emails are sent via SMTP using Nodemailer, including handling for authentication
 - PostgreSQL  
 - Google account for OAuth (optional)  
 
----
-
 ### Installation
 
-```bash
 git clone https://github.com/your-username/book-notes.git
 cd book-notes
 npm install
 Configuration
 Create a .env file in the project root with the following variables:
 
-ini
-Copiar código
 PORT=3000
 DATABASE_URL=your_postgres_url
 SESSION_SECRET=your_secret_key
@@ -112,9 +93,7 @@ GOOGLE_CLIENT_SECRET=your_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 NODE_ENV=development
-Run
-bash
-Copiar código
+
 npm run dev
 The application will be available at:
 http://localhost:3000
@@ -146,113 +125,93 @@ Developed by Tamiris, a programming student transitioning careers, focused on Ja
 
 This project was created for study and portfolio purposes.
 
-## PT-BR
+PT-BR
 
-BookNotes
+# BookNotes
 
-BookNotes é uma aplicação web full-stack desenvolvida para registro de livros lidos, anotações pessoais e avaliações. O projeto foi criado com foco em boas práticas de desenvolvimento, autenticação de usuários, persistência de dados e deploy em ambiente de produção.
+BookNotes é uma aplicação web full-stack desenvolvida para o acompanhamento de livros lidos, anotações pessoais e avaliações.  
+O projeto foi construído com foco em boas práticas de desenvolvimento, autenticação de usuários, persistência de dados e deploy em produção.
 
-O objetivo principal é demonstrar competências em JavaScript, Node.js, Express, banco de dados relacional e autenticação, servindo como projeto de estudo e portfólio.
+O principal objetivo deste projeto é demonstrar habilidades em JavaScript, Node.js, Express, bancos de dados relacionais e autenticação, servindo tanto como projeto de estudo quanto de portfólio.
 
-Deploy em produção:
-https://book-notes-vvs0.onrender.com
+## Demo
 
-Funcionalidades
+Versão online: https://book-notes-vvs0.onrender.com
 
-Cadastro e autenticação de usuários (email e senha)
+## Funcionalidades
 
-Login com Google (OAuth 2.0)
+- Cadastro e autenticação de usuários (email e senha)  
+- Login com Google (OAuth 2.0)  
+- Operações completas de CRUD para livros (criar, ler, atualizar, deletar)  
+- Anotações pessoais por livro  
+- Sistema de avaliação de livros  
+- Recuperação de senha por email  
+- Sessões autenticadas  
+- Persistência de dados com PostgreSQL  
 
-CRUD completo de livros (criar, listar, editar e excluir)
+## Recuperação de Senha
 
-Anotações pessoais por livro
+A aplicação implementa um fluxo seguro de recuperação de senha via email.  
+Quando uma redefinição é solicitada, o sistema gera um token temporário, envia um link de redefinição por email e permite que o usuário crie uma nova senha.
 
-Avaliação de livros
+O token possui validade limitada e é invalidado após o uso.  
+As senhas são armazenadas de forma segura utilizando hash com bcrypt.
 
-Recuperação de senha via email
+Os emails são enviados via SMTP usando Nodemailer, incluindo tratamento para falhas de autenticação e diferenças entre ambientes local e de produção.
 
-Sessões autenticadas
+## Tecnologias do Backend
 
-Persistência de dados em banco PostgreSQL
+- Node.js  
+- Express.js  
+- EJS (template engine)  
+- Passport.js (Local Strategy e Google OAuth)  
+- Express-session  
+- Bcrypt  
+- Nodemailer  
 
-Recuperação de Senha
+## Banco de Dados
 
-A aplicação implementa um fluxo seguro de recuperação de senha via email.
-Ao solicitar a redefinição, o sistema gera um token temporário, envia um link por email e permite que o usuário crie uma nova senha. O token possui validade limitada e é invalidado após o uso. As senhas são armazenadas utilizando hash com bcrypt.
+- PostgreSQL  
+- Neon (PostgreSQL serverless)  
 
-O envio de emails é feito via SMTP com Nodemailer, incluindo tratamento de falhas de autenticação e diferenças entre ambiente local e produção.
+## Autenticação
 
-Tecnologias Utilizadas
-Backend
+- Email e senha  
+- Google OAuth 2.0  
 
-Node.js
+## Deploy
 
-Express.js
+- Render (hospedagem da aplicação)  
+- Neon (hospedagem do banco de dados)  
 
-EJS (template engine)
+## Arquitetura e Conceitos Aplicados
 
-Passport.js (Local Strategy e Google OAuth)
+- Separação de responsabilidades (rotas, lógica e views)  
+- Autenticação baseada em sessão  
+- Hash de senha e boas práticas de segurança  
+- Integração com APIs externas (Google OAuth)  
+- Variáveis de ambiente para configurações sensíveis  
+- Modelagem de banco relacional com PostgreSQL  
+- Deploy em produção utilizando serviços em nuvem  
 
-Express-session
+## Executando o Projeto Localmente
 
-Bcrypt
+### Pré-requisitos
 
-Nodemailer
+- Node.js (versão 18 ou superior)  
+- PostgreSQL  
+- Conta Google para OAuth (opcional)  
 
-Banco de Dados
+### Instalação
 
-PostgreSQL
-
-Neon (Postgres Serverless)
-
-Autenticação
-
-Email e senha
-
-Google OAuth 2.0
-
-Deploy
-
-Render (aplicação)
-
-Neon (banco de dados)
-
-Arquitetura e Conceitos Aplicados
-
-Separação de responsabilidades (rotas, lógica e views)
-
-Autenticação baseada em sessões
-
-Hash de senhas e boas práticas de segurança
-
-Integração com APIs externas (Google OAuth)
-
-Variáveis de ambiente para configuração sensível
-
-Banco de dados relacional com PostgreSQL
-
-Deploy em produção com serviços cloud
-
-Como rodar o projeto localmente
-Pré-requisitos
-
-Node.js (versão 18 ou superior)
-
-PostgreSQL
-
-Conta Google para OAuth (opcional)
-
-Instalação
-git clone https://github.com/seu-usuario/book-notes.git
+git clone https://github.com/your-username/book-notes.git
 cd book-notes
 npm install
-
-Configuração
 
 Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
 
 PORT=3000
-DATABASE_URL=sua_url_do_postgres
+DATABASE_URL=sua_url_postgres
 SESSION_SECRET=sua_chave_secreta
 
 GOOGLE_CLIENT_ID=seu_client_id
@@ -261,14 +220,13 @@ GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 NODE_ENV=development
 
-Execução
-npm run dev
-
+Executar: npm run dev
 
 A aplicação estará disponível em:
+
 http://localhost:3000
 
-Deploy
+## Produção
 
 O projeto está em produção utilizando:
 
@@ -278,22 +236,18 @@ Neon como banco de dados PostgreSQL serverless
 
 As variáveis de ambiente são configuradas diretamente no painel do Render.
 
-Melhorias Futuras
+## Produção
 
-Paginação de livros
+O projeto está em produção utilizando:
 
-Categorias e tags
+Render para hospedagem da aplicação Node.js
 
-Estatísticas de leitura
+Neon como banco de dados PostgreSQL serverless
 
-Upload de capas de livros
+As variáveis de ambiente são configuradas diretamente no painel do Render.
 
-Melhoria da interface e experiência do usuário
+## Autor
 
-Testes automatizados
+Desenvolvido por Tamiris, estudante de programação em transição de carreira, com foco em JavaScript, Node.js e desenvolvimento web full-stack.
 
-Autoria
-
-Projeto desenvolvido por Tamiris, estudante de programação em transição de carreira, com foco em JavaScript, Node.js e desenvolvimento web full-stack.
-
-Projeto desenvolvido para fins de estudo e portfólio.
+Este projeto foi criado para fins de estudo e portfólio.

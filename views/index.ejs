@@ -7,7 +7,6 @@
 <% if (user) { %>
   <div class="home-userbar mobile-only">
     <div class="home-userbar-center">Olá, <strong><%= user.name %></strong></div>
-    <a class="btn ghost small home-userbar-right" href="/logout">Sair</a>
   </div>
 <% } %>
 
@@ -146,7 +145,7 @@
               const fullStars = '★★★★★';
               const emptyStars = '☆☆☆☆☆';
             %>
-            <span class="stars">
+            <span class="stars <%= book.rating >= 3 ? 'stars--good' : 'stars--bad' %>">
               <%= fullStars.slice(0, book.rating) + emptyStars.slice(book.rating) %>
             </span>
           </p>

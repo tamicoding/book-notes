@@ -26,18 +26,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export function createApp(options = {}) {
+  const isProd = process.env.NODE_ENV === "production";
   const {
     pool = defaultPool,
     sendResetEmail = defaultSendResetEmail,
     fetchImpl = fetch,
-    sessionSecret = process.env.SESSION_SECRET || "troque-essa-chave",
+    sessionSecret = resolveSessionSecret(isProd),
     logger = createLogger(process.env.NODE_ENV === "production"),
     sessionStore,
     mediaService = createCloudinaryService(),
   } = options;
 
   const app = express();
-  const isProd = process.env.NODE_ENV === "production";
   const bookService = createBookService({ pool, fetchImpl, logger });
   const authService = createAuthService({ pool, sendResetEmail, logger, isProd });
   const resolvedSessionStore =
@@ -145,6 +145,22 @@ export function createApp(options = {}) {
   });
 
   return app;
+}
+
+function resolveSessionSecret(isProd) {
+  const sessionSecret = process.env.SESSION_SECRET?.trim();
+
+  if (sessionSecret) {
+    return sessionSecret;
+  }
+
+  if (isProd) {
+    throw new Error(
+      "SESSION_SECRET não está definida. Configure essa variável antes de iniciar a aplicação em produção."
+    );
+  }
+
+  return "dev-session-secret-change-me";
 }
 
 function createLogger(isProd) {

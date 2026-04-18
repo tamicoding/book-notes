@@ -8,27 +8,37 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "node tests/integration.test.js",
+    "test:e2e": "playwright test",
+    "migrate:create": "node ./node_modules/node-pg-migrate/bin/node-pg-migrate.js create --migrations-dir migrations --migration-file-language js",
+    "migrate:up": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate.js up --migrations-dir migrations --migration-file-language js",
+    "migrate:down": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate.js down --migrations-dir migrations --migration-file-language js"
   },
   "dependencies": {
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "body-parser": "^1.20.2",
+    "cloudinary": "^2.9.0",
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
     "express-rate-limit": "^8.2.1",
     "express-session": "^1.18.2",
+    "multer": "^2.1.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.13",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "node-pg-migrate": "^7.4.0",
     "nodemon": "^3.1.10"
   }
 }

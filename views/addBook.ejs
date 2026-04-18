@@ -3,21 +3,31 @@
 <!-- Formulário para criar um novo registro de livro -->
 <section class="form-card">
   <h2>Adicionar livro</h2>
-  <form action="/books/add" method="post" class="book-form">
+
+  <% if (error) { %>
+    <div class="alert"><%= error %></div>
+  <% } %>
+
+  <form action="/books/add?_csrf=<%= csrfToken %>" method="post" enctype="multipart/form-data" class="book-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Título</label>
-    <input name="title" required>
+    <input name="title" required value="<%= formData?.title || '' %>">
 
     <label>Autor</label>
-    <input name="author">
+    <input name="author" value="<%= formData?.author || '' %>">
 
     <label>Notas</label>
-    <textarea name="notes" rows="5"></textarea>
+    <textarea name="notes" rows="5"><%= formData?.notes || '' %></textarea>
 
     <label>Nota (0-5)</label>
-    <input type="number" name="rating" min="0" max="5">
+    <input type="number" name="rating" min="0" max="5" value="<%= formData?.rating || '' %>">
 
     <label>Data de leitura</label>
-    <input type="date" name="read_date" value="">
+    <input type="date" name="read_date" value="<%= formData?.read_date || '' %>">
+
+    <label>Capa manual (opcional)</label>
+    <input type="file" name="cover_image" accept="image/*">
+    <small class="form-hint">Use uma imagem sua quando nenhuma capa automática for encontrada.</small>
 
     <div class="actions">
       <!-- Ações do formulário: salvar ou cancelar -->

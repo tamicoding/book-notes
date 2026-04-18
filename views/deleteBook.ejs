@@ -5,7 +5,8 @@
   <h2>Excluir livro</h2>
   <p>Tem certeza que deseja excluir <strong><%= book.title %></strong>?</p>
 
-  <form action="\1" method="post" class="book-form">
+  <form action="/books/delete/<%= book.id %>" method="post" class="book-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <div class="actions">
       <button class="btn danger" type="submit">Sim, excluir</button>
       <a class="btn ghost" href="/">Cancelar</a>

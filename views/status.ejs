@@ -1,0 +1,14 @@
+<% title = title || "Aviso"; %>
+
+<section class="form-card status-card">
+  <div class="status-icon"><%= icon || "i" %></div>
+  <h2><%= heading %></h2>
+  <p class="status-text"><%= message %></p>
+
+  <div class="actions">
+    <a class="btn primary" href="<%= primaryHref || '/' %>"><%= primaryLabel || "Voltar" %></a>
+    <% if (secondaryHref && secondaryLabel) { %>
+      <a class="btn ghost" href="<%= secondaryHref %>"><%= secondaryLabel %></a>
+    <% } %>
+  </div>
+</section>

@@ -3,7 +3,13 @@
 <!-- Formulário para editar um livro existente. -->
 <section class="form-card">
   <h2>Editar: <%= book.title %></h2>
-  <form action="/books/edit/<%= book.id %>" method="post" class="book-form">
+
+  <% if (error) { %>
+    <div class="alert"><%= error %></div>
+  <% } %>
+
+  <form action="/books/edit/<%= book.id %>?_csrf=<%= csrfToken %>" method="post" enctype="multipart/form-data" class="book-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Título</label>
     <input name="title" required value="<%= book.title %>">
 
@@ -18,6 +24,34 @@
 
     <label>Data de leitura</label>
     <input type="date" name="read_date" value="<%= book.read_date ? new Date(book.read_date).toISOString().split('T')[0] : '' %>">
+
+    <% if (book.manual_cover_url || book.cover_url) { %>
+      <label>Capa atual</label>
+      <div class="cover-preview-row">
+        <img
+          class="cover-preview-image"
+          src="<%= book.manual_cover_url || book.cover_url %>"
+          alt="Capa atual de <%= book.title %>"
+        >
+        <div class="cover-preview-meta">
+          <strong><%= book.manual_cover_url ? 'Capa manual' : 'Capa automática' %></strong>
+          <span class="form-hint">
+            <%= book.manual_cover_url ? 'Esta imagem foi enviada manualmente.' : 'Esta imagem veio da busca automática.' %>
+          </span>
+        </div>
+      </div>
+    <% } %>
+
+    <label>Nova capa manual (opcional)</label>
+    <input type="file" name="cover_image" accept="image/*">
+    <small class="form-hint">Se você enviar uma nova imagem, ela substitui a capa manual atual.</small>
+
+    <% if (book.manual_cover_url) { %>
+      <label class="checkbox-row">
+        <input type="checkbox" name="remove_manual_cover" value="1" <%= book.remove_manual_cover === '1' ? 'checked' : '' %>>
+        Remover capa manual e voltar a usar a capa automática
+      </label>
+    <% } %>
 
     <div class="actions">
       <button class="btn primary" type="submit">Atualizar</button>

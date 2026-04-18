@@ -9,11 +9,12 @@
   <% } %>
 
   <form action="/register" method="post" class="book-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Nome</label>
-    <input type="text" name="name">
+    <input type="text" name="name" value="<%= formData?.name || '' %>">
 
     <label>Email</label>
-    <input type="email" name="email" required>
+    <input type="email" name="email" required value="<%= formData?.email || '' %>">
 
     <label>Senha</label>
     <input type="password" name="password" required>

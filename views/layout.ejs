@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title><%= title || "Book Notes" %></title>
 
+  <script>
+    (function () {
+      const savedTheme = localStorage.getItem("booknotes-theme");
+      const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+      const theme = savedTheme || (systemPrefersLight ? "light" : "dark");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
   </style>
@@ -17,16 +26,35 @@
   <header class="site-header">
     <a class="brand" href="/">Book Notes</a>
 
+    <div class="header-theme">
+      <button
+        class="theme-toggle"
+        id="themeToggle"
+        type="button"
+        aria-label="Alternar tema"
+        aria-pressed="false"
+      >
+        <span class="theme-toggle-track">
+          <span class="theme-toggle-icon theme-toggle-icon--sun" aria-hidden="true">☀</span>
+          <span class="theme-toggle-icon theme-toggle-icon--moon" aria-hidden="true">☾</span>
+        </span>
+        <span class="theme-toggle-thumb" aria-hidden="true"></span>
+      </button>
+    </div>
+
     <% if (user) { %>
-      <!-- Desktop: Olá + Sair na direita -->
       <div class="header-user desktop-only">
         <span>Olá, <strong><%= user.name %></strong></span>
-        <a href="/logout" class="btn ghost small">Sair</a>
+        <form action="/logout" method="post" style="display:inline;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn ghost small" type="submit">Sair</button>
+        </form>
       </div>
     <% } %>
 
-    <!-- Mobile: Hambúrguer na direita -->
-    <button class="icon-btn mobile-only" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <div class="header-actions">
+      <button class="icon-btn mobile-only" id="menuToggle" aria-label="Abrir menu">☰</button>
+    </div>
   </header>
 
   <!-- Overlay: drawer/filtro móvel -->
@@ -50,10 +78,21 @@
   <!-- Pequeno script para abrir/fechar drawer e filtro -->
   <script>
     (function(){
+      const themeToggle = document.getElementById("themeToggle");
       const btn = document.getElementById("menuToggle");
       const overlay = document.getElementById("overlay");
       const authDrawer = document.getElementById("authDrawer");
       const closeBtn = document.getElementById("drawerClose");
+      const root = document.documentElement;
+
+      function applyTheme(theme){
+        root.dataset.theme = theme;
+        themeToggle?.setAttribute("aria-pressed", String(theme === "light"));
+        themeToggle?.setAttribute(
+          "aria-label",
+          theme === "light" ? "Ativar tema escuro" : "Ativar tema claro"
+        );
+      }
 
       function closeAll(){
         overlay?.classList.remove("open");
@@ -62,6 +101,14 @@
         filter?.classList.remove("open");
         document.body.classList.remove("no-scroll");
       }
+
+      themeToggle?.addEventListener("click", () => {
+        const nextTheme = root.dataset.theme === "light" ? "dark" : "light";
+        localStorage.setItem("booknotes-theme", nextTheme);
+        applyTheme(nextTheme);
+      });
+
+      applyTheme(root.dataset.theme === "light" ? "light" : "dark");
 
       function openAuth(){
         if(!authDrawer) return;

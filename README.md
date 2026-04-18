@@ -1,253 +1,558 @@
-🇺🇸 English
-
 # BookNotes
 
-BookNotes is a full-stack web application developed for tracking read books, personal notes, and ratings.  
-The project was built with a focus on development best practices, user authentication, data persistence, and production deployment.
+![CI](https://github.com/tamicoding/book-notes/actions/workflows/ci.yml/badge.svg)
 
-The main goal of this project is to demonstrate skills in JavaScript, Node.js, Express, relational databases, and authentication, serving as both a study and portfolio project.
+BookNotes é uma aplicação web full-stack para acompanhar livros, anotações pessoais, avaliações e histórico de leitura.
+Ela foi desenvolvida como projeto de portfólio para demonstrar habilidades de backend, autenticação, segurança, testes e deploy em produção com Node.js e PostgreSQL.
 
-## Demo
+BookNotes is a full-stack web application for tracking books, personal notes, ratings, and reading history.
+It was built as a portfolio project to demonstrate backend, authentication, security, testing, and production deployment skills with Node.js and PostgreSQL.
 
-Live version: https://book-notes-vvs0.onrender.com
+## Índice
 
-## Features
+- [PT-BR](#pt-br)
+- [English](#english)
 
-- User registration and authentication (email and password)  
-- Google login (OAuth 2.0)  
-- Full CRUD operations for books (create, read, update, delete)  
-- Personal notes per book  
-- Book rating system  
-- Password recovery via email  
-- Authenticated sessions  
-- Data persistence using PostgreSQL  
+## PT-BR
 
-## Password Recovery
+### Demo
 
-The application implements a secure password recovery flow via email.  
-When a reset is requested, the system generates a temporary token, sends a reset link by email, and allows the user to create a new password.
+Aplicação online: https://book-notes-vvs0.onrender.com
 
-The token has a limited validity period and is invalidated after use.  
-Passwords are securely stored using bcrypt hashing.
+Vídeo demo: `[adicione aqui o link do vídeo]`
 
-Emails are sent via SMTP using Nodemailer, including handling for authentication failures and differences between local and production environments.
+### Screenshots
 
+Adicione aqui as capturas principais do projeto:
 
-## Backend Technologies
+- Dashboard / home
+- Login
+- Cadastro
+- Adicionar livro
+- Editar livro
+- Excluir livro
+- Reset de senha
 
-- Node.js  
-- Express.js  
-- EJS (template engine)  
-- Passport.js (Local Strategy and Google OAuth)  
-- Express-session  
-- Bcrypt  
-- Nodemailer  
+```md
+![Dashboard](./assets/dashboard.png)
+![Login](./assets/login.png)
+![Cadastro](./assets/register.png)
+![Adicionar Livro](./assets/add.png)
+![Editar Livro](./assets/edit.png)
+![Excluir Livro](./assets/delete.png)
+![Reset de Senha](./assets/reset.png)
+```
 
-## Database
+### Funcionalidades
 
-- PostgreSQL  
-- Neon (serverless PostgreSQL)  
+- Cadastro e login com email e senha
+- Login com Google OAuth 2.0
+- CRUD completo de livros
+- Notas e avaliação por livro
+- Filtros por data de leitura
+- Paginação de livros na listagem principal, busca e filtros
+- Recuperação de senha por email
+- Autenticação baseada em sessão
+- Proteção CSRF em envios de formulário
+- Rate limit em solicitações de redefinição de senha
+- Sessões persistentes em produção
+- Testes de integração cobrindo auth, reset e CRUD
 
-## Authentication
+### Stack Tecnológica
 
-- Email and password  
-- Google OAuth 2.0  
+- Node.js
+- Express.js
+- EJS
+- PostgreSQL
+- Passport.js
+- Express-session
+- Zod
+- Nodemailer
+- Winston
+- Render
+- Neon
 
-## Deployment
+### Destaques de Segurança
 
-- Render (application hosting)  
-- Neon (database hosting)  
+- Hash de senha com `bcrypt`
+- Token de reset armazenado com hash
+- Autenticação baseada em sessão
+- Proteção CSRF em requisições que alteram estado
+- Rate limiting no fluxo de reset
+- Variáveis de ambiente para dados sensíveis
+- Persistência de sessão no PostgreSQL em produção
 
-## Architecture and Concepts Applied
+### Arquitetura
 
-- Separation of concerns (routes, logic, and views)  
-- Session-based authentication  
-- Password hashing and security best practices  
-- Integration with external APIs (Google OAuth)  
-- Environment variables for sensitive configuration  
-- Relational database design with PostgreSQL  
-- Production deployment using cloud services  
+Visão geral da estrutura:
 
-## Running the Project Locally
+```text
+.
+├── app.js
+├── index.js
+├── db.js
+├── routes/
+│   ├── auth.js
+│   └── books.js
+├── services/
+│   ├── authService.js
+│   ├── bookService.js
+│   └── sessionStore.js
+├── middleware/
+│   ├── auth.js
+│   └── csrf.js
+├── validation/
+│   └── schemas.js
+├── views/
+├── public/
+└── tests/
+    ├── integration.test.js
+    └── support/
+```
 
-### Prerequisites
+### Decisões Técnicas Principais
 
-- Node.js (version 18 or higher)  
-- PostgreSQL  
-- Google account for OAuth (optional)  
+- Separação entre rotas, serviços, middlewares e validação
+- Uso de PostgreSQL para persistência relacional e sessões em produção
+- Fluxo seguro de redefinição de senha com token hasheado
+- Validação centralizada com Zod
+- Testes de integração sem depender do banco real de produção
 
-### Installation
+### Testes
 
-git clone https://github.com/your-username/book-notes.git
+Para rodar a suíte de integração:
+
+```bash
+npm test
+```
+
+Para rodar os testes E2E com Playwright:
+
+```bash
+npm run test:e2e
+```
+
+Na primeira execução do Playwright, instale o navegador:
+
+```bash
+npx playwright install chromium
+```
+
+Atualmente os testes cobrem:
+
+- fluxo de autenticação
+- fluxo de recuperação de senha
+- fluxo CRUD de livros
+- paginação da listagem de livros
+- fluxos E2E no navegador com Playwright
+
+### Migrations do Banco
+
+Este projeto usa migrations versionadas com `node-pg-migrate`.
+
+Criar uma nova migration:
+
+```bash
+npm run migrate:create -- nome-da-migration
+```
+
+Executar migrations pendentes:
+
+```bash
+npm run migrate:up
+```
+
+Fazer rollback da última migration:
+
+```bash
+npm run migrate:down
+```
+
+A migration inicial cria:
+
+- `users`
+- `books`
+- `user_sessions`
+
+### Como Rodar Localmente
+
+#### Pré-requisitos
+
+- Node.js 18+
+- PostgreSQL
+- Credenciais Google OAuth opcionais
+- Credenciais SMTP opcionais, mas recomendadas para reset de senha
+
+#### Instalação
+
+```bash
+git clone https://github.com/tamicoding/book-notes.git
 cd book-notes
 npm install
-Configuration
-Create a .env file in the project root with the following variables:
+npm run migrate:up
+```
 
+#### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz:
+
+```env
 PORT=3000
-DATABASE_URL=your_postgres_url
-SESSION_SECRET=your_secret_key
-
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
-
 NODE_ENV=development
-
-npm run dev
-The application will be available at:
-http://localhost:3000
-
-Deployment
-The project is deployed in production using:
-
-Render for hosting the Node.js application
-
-Neon as a serverless PostgreSQL database
-
-Environment variables are configured directly in the Render dashboard.
-
-Future Improvements
-Book pagination
-
-Categories and tags
-
-Reading statistics
-
-Book cover upload
-
-UI/UX enhancements
-
-Automated tests
-
-Author
-Developed by Tamiris, a programming student transitioning careers, focused on JavaScript, Node.js, and full-stack web development.
-
-This project was created for study and portfolio purposes.
-
-PT-BR
-
-# BookNotes
-
-BookNotes é uma aplicação web full-stack desenvolvida para o acompanhamento de livros lidos, anotações pessoais e avaliações.  
-O projeto foi construído com foco em boas práticas de desenvolvimento, autenticação de usuários, persistência de dados e deploy em produção.
-
-O principal objetivo deste projeto é demonstrar habilidades em JavaScript, Node.js, Express, bancos de dados relacionais e autenticação, servindo tanto como projeto de estudo quanto de portfólio.
-
-## Demo
-
-Versão online: https://book-notes-vvs0.onrender.com
-
-## Funcionalidades
-
-- Cadastro e autenticação de usuários (email e senha)  
-- Login com Google (OAuth 2.0)  
-- Operações completas de CRUD para livros (criar, ler, atualizar, deletar)  
-- Anotações pessoais por livro  
-- Sistema de avaliação de livros  
-- Recuperação de senha por email  
-- Sessões autenticadas  
-- Persistência de dados com PostgreSQL  
-
-## Recuperação de Senha
-
-A aplicação implementa um fluxo seguro de recuperação de senha via email.  
-Quando uma redefinição é solicitada, o sistema gera um token temporário, envia um link de redefinição por email e permite que o usuário crie uma nova senha.
-
-O token possui validade limitada e é invalidado após o uso.  
-As senhas são armazenadas de forma segura utilizando hash com bcrypt.
-
-Os emails são enviados via SMTP usando Nodemailer, incluindo tratamento para falhas de autenticação e diferenças entre ambientes local e de produção.
-
-## Tecnologias do Backend
-
-- Node.js  
-- Express.js  
-- EJS (template engine)  
-- Passport.js (Local Strategy e Google OAuth)  
-- Express-session  
-- Bcrypt  
-- Nodemailer  
-
-## Banco de Dados
-
-- PostgreSQL  
-- Neon (PostgreSQL serverless)  
-
-## Autenticação
-
-- Email e senha  
-- Google OAuth 2.0  
-
-## Deploy
-
-- Render (hospedagem da aplicação)  
-- Neon (hospedagem do banco de dados)  
-
-## Arquitetura e Conceitos Aplicados
-
-- Separação de responsabilidades (rotas, lógica e views)  
-- Autenticação baseada em sessão  
-- Hash de senha e boas práticas de segurança  
-- Integração com APIs externas (Google OAuth)  
-- Variáveis de ambiente para configurações sensíveis  
-- Modelagem de banco relacional com PostgreSQL  
-- Deploy em produção utilizando serviços em nuvem  
-
-## Executando o Projeto Localmente
-
-### Pré-requisitos
-
-- Node.js (versão 18 ou superior)  
-- PostgreSQL  
-- Conta Google para OAuth (opcional)  
-
-### Instalação
-
-git clone https://github.com/your-username/book-notes.git
-cd book-notes
-npm install
-
-Crie um arquivo .env na raiz do projeto com as seguintes variáveis:
-
-PORT=3000
 DATABASE_URL=sua_url_postgres
-SESSION_SECRET=sua_chave_secreta
+SESSION_SECRET=sua_chave_de_sessao
+BASE_URL=http://localhost:3000
 
-GOOGLE_CLIENT_ID=seu_client_id
-GOOGLE_CLIENT_SECRET=seu_client_secret
+GOOGLE_CLIENT_ID=seu_google_client_id
+GOOGLE_CLIENT_SECRET=seu_google_client_secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
-NODE_ENV=development
+SMTP_HOST=seu_smtp_host
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=seu_smtp_user
+SMTP_PASS=sua_senha_smtp
+SMTP_FROM=seu_email_remetente
+```
 
-Executar: npm run dev
+#### Executar
 
-A aplicação estará disponível em:
+```bash
+npm run dev
+```
 
+A aplicação ficará disponível em:
+
+```text
 http://localhost:3000
+```
 
-## Produção
+### Rodando com Docker
 
-O projeto está em produção utilizando:
+Para subir a aplicação e o banco com Docker:
 
-Render para hospedagem da aplicação Node.js
+```bash
+docker compose up --build
+```
 
-Neon como banco de dados PostgreSQL serverless
+Esse setup sobe:
 
-As variáveis de ambiente são configuradas diretamente no painel do Render.
+- a aplicação Node.js em `http://localhost:3000`
+- um PostgreSQL em `localhost:5432`
 
-## Produção
+Observações:
 
-O projeto está em produção utilizando:
+- o container da aplicação executa `npm run migrate:up` antes de iniciar
+- o banco padrão no Docker é `booknotes`
+- as credenciais padrão no Docker são `postgres/postgres`
+- variáveis de Google OAuth e SMTP ainda podem ser passadas pelo seu shell local ou `.env`
+- os testes Playwright não dependem desse stack Docker porque usam um servidor isolado em memória
 
-Render para hospedagem da aplicação Node.js
+### Deploy
 
-Neon como banco de dados PostgreSQL serverless
+- Hospedagem da aplicação: Render
+- Banco de dados: Neon PostgreSQL
+- Variáveis de ambiente configuradas no painel do Render
+- Execute `npm run migrate:up` antes de iniciar a aplicação em um novo ambiente
 
-As variáveis de ambiente são configuradas diretamente no painel do Render.
+### Por Que Este Projeto é Relevante
 
-## Autor
+Este projeto foi desenvolvido para demonstrar habilidades práticas valorizadas em entrevistas para backend e desenvolvimento web full-stack, especialmente:
 
-Desenvolvido por Tamiris, estudante de programação em transição de carreira, com foco em JavaScript, Node.js e desenvolvimento web full-stack.
+- autenticação e autorização
+- gerenciamento seguro de sessão
+- segurança de formulários com CSRF
+- validação de entrada
+- integração com banco de dados
+- deploy em produção
+- testes automatizados
+- mudanças versionadas de schema no banco
 
-Este projeto foi criado para fins de estudo e portfólio.
+### Próximas Melhorias
+
+- Pipeline CI com GitHub Actions
+- Tags ou categorias
+- Dashboard de estatísticas de leitura
+- Upload manual de capas
+- Refinos de UI/UX
+
+### Autor
+
+Desenvolvido por Tamiris como projeto de estudo e portfólio durante a transição de carreira para desenvolvimento de software.
+
+LinkedIn: https://www.linkedin.com/in/tamirisfreis/
+
+GitHub: https://github.com/tamicoding
+
+---
+
+## English
+
+### Live Demo
+
+Live application: https://book-notes-vvs0.onrender.com
+
+Video demo: `[add demo video link here]`
+
+### Screenshots
+
+Add the main screenshots of the project here:
+
+- Dashboard / home
+- Login
+- Register
+- Add book
+- Edit book
+- Delete book
+- Password reset
+
+```md
+![Dashboard](./assets/dashboard.png)
+![Login](./assets/login.png)
+![Register](./assets/register.png)
+![Add Book](./assets/add.png)
+![Edit Book](./assets/edit.png)
+![Delete Book](./assets/delete.png)
+![Reset Password](./assets/reset.png)
+```
+
+### Features
+
+- User registration and login with email and password
+- Google OAuth 2.0 authentication
+- Full CRUD for books
+- Notes and rating per book
+- Reading date filters
+- Book pagination across main list, search, and date filters
+- Password recovery via email
+- Session-based authentication
+- CSRF protection for form submissions
+- Rate limiting on password reset requests
+- Persistent sessions in production
+- Integration tests covering auth, reset password, and CRUD
+
+### Tech Stack
+
+- Node.js
+- Express.js
+- EJS
+- PostgreSQL
+- Passport.js
+- Express-session
+- Zod
+- Nodemailer
+- Winston
+- Render
+- Neon
+
+### Security Highlights
+
+- Password hashing with `bcrypt`
+- Reset password tokens stored as hash
+- Session-based authentication
+- CSRF protection on state-changing requests
+- Rate limiting on password reset
+- Environment variables for sensitive credentials
+- Persistent session storage in PostgreSQL for production
+
+### Architecture
+
+Project structure overview:
+
+```text
+.
+├── app.js
+├── index.js
+├── db.js
+├── routes/
+│   ├── auth.js
+│   └── books.js
+├── services/
+│   ├── authService.js
+│   ├── bookService.js
+│   └── sessionStore.js
+├── middleware/
+│   ├── auth.js
+│   └── csrf.js
+├── validation/
+│   └── schemas.js
+├── views/
+├── public/
+└── tests/
+    ├── integration.test.js
+    └── support/
+```
+
+### Main Technical Decisions
+
+- Separated routes, services, middleware, and validation layers to improve maintainability
+- Used PostgreSQL for relational persistence and production session storage
+- Implemented secure password reset flow with hashed tokens
+- Centralized request validation with Zod
+- Added integration tests without depending on the real production database
+
+### Tests
+
+Run the integration test suite:
+
+```bash
+npm test
+```
+
+Run Playwright end-to-end tests:
+
+```bash
+npm run test:e2e
+```
+
+First-time setup for Playwright browsers:
+
+```bash
+npx playwright install chromium
+```
+
+Current automated coverage includes:
+
+- authentication flow
+- password reset flow
+- book CRUD flow
+- paginated book list flow
+- browser E2E flows with Playwright
+
+### Database Migrations
+
+This project uses versioned PostgreSQL migrations with `node-pg-migrate`.
+
+Create a new migration:
+
+```bash
+npm run migrate:create -- migration-name
+```
+
+Run pending migrations:
+
+```bash
+npm run migrate:up
+```
+
+Rollback the last migration:
+
+```bash
+npm run migrate:down
+```
+
+The initial migration creates:
+
+- `users`
+- `books`
+- `user_sessions`
+
+### Running Locally
+
+#### Prerequisites
+
+- Node.js 18+
+- PostgreSQL
+- Google OAuth credentials (optional)
+- SMTP credentials (optional, but recommended for password reset emails)
+
+#### Installation
+
+```bash
+git clone https://github.com/tamicoding/book-notes.git
+cd book-notes
+npm install
+npm run migrate:up
+```
+
+#### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+PORT=3000
+NODE_ENV=development
+DATABASE_URL=your_postgres_url
+SESSION_SECRET=your_session_secret
+BASE_URL=http://localhost:3000
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+SMTP_FROM=your_from_email
+```
+
+#### Start the Application
+
+```bash
+npm run dev
+```
+
+Application URL:
+
+```text
+http://localhost:3000
+```
+
+### Running with Docker
+
+Start the full stack with Docker:
+
+```bash
+docker compose up --build
+```
+
+This setup starts:
+
+- the Node.js application on `http://localhost:3000`
+- a PostgreSQL database on `localhost:5432`
+
+Notes:
+
+- the application container runs `npm run migrate:up` before starting
+- the default Docker database is `booknotes`
+- the default Docker credentials are `postgres/postgres`
+- Google OAuth and SMTP variables can still be passed from your local shell or `.env`
+- Playwright tests do not depend on this Docker stack because they use an isolated in-memory test server
+
+### Deployment
+
+- Application hosting: Render
+- Database hosting: Neon PostgreSQL
+- Environment variables configured in the Render dashboard
+- Run `npm run migrate:up` before starting the app in a new environment
+
+### Why This Project Matters
+
+This project was built to demonstrate practical full-stack development skills expected in junior and mid-level backend/web interviews, especially:
+
+- authentication and authorization
+- secure session handling
+- form security with CSRF
+- input validation
+- database integration
+- production deployment
+- automated testing
+- versioned database schema changes
+
+### Future Improvements
+
+- GitHub Actions CI pipeline
+- Tags or categories
+- Reading statistics dashboard
+- Manual upload for book covers
+- UI/UX refinements
+
+### Author
+
+Developed by Tamiris as a portfolio and study project during a career transition into software development.
+
+LinkedIn: https://www.linkedin.com/in/tamirisfreis/
+
+GitHub: https://github.com/tamicoding

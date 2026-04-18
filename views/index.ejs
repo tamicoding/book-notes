@@ -1,6 +1,29 @@
 <% title = "Meus livros"; %>
 <% // `dates` chega do middleware em `index.js` e é usada para popular o filtro lateral %>
 <% let datesList = (typeof dates !== 'undefined' && dates) ? dates : []; %>
+<% let paginationData = pagination || null; %>
+<% let selectedFilter = activeFilter || {}; %>
+<% function buildPageHref(pageNumber) {
+  const query = new URLSearchParams();
+  const sourceQuery = paginationQuery || {};
+  Object.keys(sourceQuery).forEach(key => {
+    if (sourceQuery[key] !== undefined && sourceQuery[key] !== null && sourceQuery[key] !== '') {
+      query.set(key, sourceQuery[key]);
+    }
+  });
+  if (pageNumber > 1) query.set('page', String(pageNumber));
+  const queryString = query.toString();
+  return `${paginationBasePath || '/'}${queryString ? `?${queryString}` : ''}`;
+} %>
+<% function getVisiblePages(data) {
+  if (!data) return [];
+  const totalPages = data.totalPages || 1;
+  const currentPage = data.currentPage || 1;
+  const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+  return [...pages]
+    .filter(page => page >= 1 && page <= totalPages)
+    .sort((a, b) => a - b);
+} %>
 
 <!-- Home: barra do usuário (mobile only) -->
 
@@ -10,10 +33,38 @@
   </div>
 <% } %>
 
+<% if (message) { %>
+  <div class="alert alert--<%= messageType || 'info' %> page-alert"><%= message %></div>
+<% } %>
+
+<% if (activeView) { %>
+  <section class="view-context view-context--<%= activeView.type || 'all' %>">
+    <div class="view-context-copy">
+      <span class="view-context-kicker">Explorando agora</span>
+      <p class="view-context-label"><%= activeView.label %></p>
+      <p class="view-context-description"><%= activeView.description %></p>
+
+      <% if (paginationData) { %>
+        <div class="view-context-meta">
+          <span class="view-context-chip"><%= paginationData.totalItems %> livro(s)</span>
+          <span class="view-context-chip">Página <%= paginationData.currentPage %> de <%= paginationData.totalPages %></span>
+        </div>
+      <% } %>
+    </div>
+
+    <% if ((activeView.type === 'search' || activeView.type === 'date') && paginationBasePath !== '/') { %>
+      <a href="/" class="btn ghost small view-context-action">Limpar filtro</a>
+    <% } %>
+  </section>
+<% } %>
+
 <!-- Topo: busca + botão de adicionar livro -->
 <div class="top-row">
   <form action="/search" class="search-form" method="get">
-    <input name="q" placeholder="Pesquisar título ou autor" value="<%= search || '' %>">
+    <div class="search-input-wrap">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input name="q" placeholder="Pesquisar título ou autor" value="<%= search || '' %>">
+    </div>
     <button type="submit" class="btn primary">Buscar</button>
   </form>
 
@@ -61,26 +112,43 @@
       const months = Object.keys(map[year]).sort((a,b)=>Number(b)-Number(a));
   %>
     <div class="year-block">
-      <button class="year-btn" type="button" onclick="toggleYear('<%= year %>')">
+      <button
+        class="year-btn <%= selectedFilter.year === year ? 'is-active' : '' %>"
+        type="button"
+        onclick="toggleYear('<%= year %>')"
+      >
         <%= year %>
       </button>
 
-      <div id="year-<%= year %>" class="months hidden">
+      <div id="year-<%= year %>" class="months <%= selectedFilter.year === year ? '' : 'hidden' %>">
         <% months.forEach(month => { %>
-          <button class="month-btn" type="button" onclick="toggleMonth('<%= year %>','<%= month %>')">
+          <button
+            class="month-btn <%= selectedFilter.year === year && selectedFilter.month === String(Number(month)) ? 'is-active' : '' %>"
+            type="button"
+            onclick="toggleMonth('<%= year %>','<%= month %>')"
+          >
             <%= new Date(2020, Number(month)-1, 1).toLocaleString('pt-BR', { month: 'long' }) %>
           </button>
 
-          <div id="month-<%= year %>-<%= month %>" class="days hidden">
+          <div
+            id="month-<%= year %>-<%= month %>"
+            class="days <%= selectedFilter.year === year && selectedFilter.month === String(Number(month)) ? '' : 'hidden' %>"
+          >
             <% map[year][month].forEach(day => { %>
-              <a class="day-link" href="/filter/date/<%= year %>/<%= Number(month) %>/<%= Number(day) %>">
+              <a
+                class="day-link <%= selectedFilter.year === year && selectedFilter.month === String(Number(month)) && selectedFilter.day === String(Number(day)) ? 'is-active' : '' %>"
+                href="/filter/date/<%= year %>/<%= Number(month) %>/<%= Number(day) %>"
+              >
                 <%= day %>/<%= month %>/<%= year %>
               </a>
             <% }) %>
           </div>
         <% }) %>
 
-        <a href="/filter/date/<%= year %>" class="month-link month-all">
+        <a
+          href="/filter/date/<%= year %>"
+          class="month-link month-all <%= selectedFilter.year === year && !selectedFilter.month ? 'is-active' : '' %>"
+        >
           Ver todos de <%= year %>
         </a>
       </div>
@@ -89,7 +157,10 @@
 
   <div class="mobile-only" style="margin-top:14px;">
     <!-- Botão de logout mobile only dentro do drawer -->
-    <a href="/logout" class="btn ghost full">Sair</a>
+    <form action="/logout" method="post">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn ghost full" type="submit">Sair</button>
+    </form>
   </div>
 </aside>
 
@@ -121,42 +192,52 @@
 
 <section class="books-grid">
   <% if (!books || books.length === 0) { %>
-    <div class="empty">Nenhum livro cadastrado.</div>
+    <div class="empty-state">
+      <div class="empty-state-icon" aria-hidden="true">📚</div>
+      <h2>Sua estante ainda está vazia</h2>
+      <p>Adicione seu primeiro livro para começar a acompanhar leituras, notas e avaliações.</p>
+      <a href="/books/add" class="btn primary">Adicionar primeiro livro</a>
+    </div>
   <% } %>
 
   <% books.forEach(book => { %>
     <article class="card">
 
       <div class="cover-wrap">
-        <% if (book.cover_url) { %>
-          <img src="<%= book.cover_url %>" alt="Capa de <%= book.title %>">
+        <% if (book.manual_cover_url || book.cover_url) { %>
+          <img src="<%= book.manual_cover_url || book.cover_url %>" alt="Capa de <%= book.title %>">
         <% } else { %>
-          <img src="/images/placeholder.png" alt="Sem capa">
+          <div class="cover-placeholder">
+            <span class="cover-placeholder-icon" aria-hidden="true">✦</span>
+            <span class="cover-placeholder-text">Sem capa</span>
+          </div>
         <% } %>
       </div>
 
       <div class="card-body">
         <h3><%= book.title %></h3>
-        <p class="muted">por <%= book.author || '—' %></p>
+        <p class="card-author">por <%= book.author || 'Autor não informado' %></p>
 
-        <% if (book.rating) { %>
-          <p class="rating">
-            <%
-              const fullStars = '★★★★★';
-              const emptyStars = '☆☆☆☆☆';
-            %>
-            <span class="stars <%= book.rating >= 3 ? 'stars--good' : 'stars--bad' %>">
-              <%= fullStars.slice(0, book.rating) + emptyStars.slice(book.rating) %>
-            </span>
-          </p>
-        <% } %>
+        <div class="card-meta">
+          <% if (book.rating) { %>
+            <p class="rating">
+              <%
+                const fullStars = '★★★★★';
+                const emptyStars = '☆☆☆☆☆';
+              %>
+              <span class="stars <%= book.rating >= 3 ? 'stars--good' : 'stars--bad' %>">
+                <%= fullStars.slice(0, book.rating) + emptyStars.slice(book.rating) %>
+              </span>
+            </p>
+          <% } %>
 
-        <% if (book.read_date) { %>
-          <p class="muted">
-            Lido em:
-            <strong><%= new Date(book.read_date).toLocaleDateString("pt-BR") %></strong>
-          </p>
-        <% } %>
+          <% if (book.read_date) { %>
+            <p class="card-date">
+              Lido em
+              <strong><%= new Date(book.read_date).toLocaleDateString("pt-BR") %></strong>
+            </p>
+          <% } %>
+        </div>
 
         <p class="notes"><%= book.notes || "Sem notas" %></p>
       </div>
@@ -170,11 +251,46 @@
   <% }) %>
 </section>
 
-<script>
-  // Abre/fecha os meses dentro de um ano (desktop e mobile)
-  function toggleYear(year){
-    const el = document.getElementById("year-" + year);
-    if(!el) return;
-    el.classList.toggle("hidden");
-  }
-</script>
+<% if (paginationData && paginationData.totalItems > paginationData.pageSize) { %>
+  <nav class="pagination" aria-label="Paginação de livros">
+    <div class="pagination-status">
+      <strong>Página <%= paginationData.currentPage %></strong>
+      <span>de <%= paginationData.totalPages %></span>
+      <small><%= paginationData.totalItems %> livro(s)</small>
+    </div>
+
+    <div class="pagination-controls">
+      <a
+        class="btn ghost small pagination-nav <%= paginationData.hasPreviousPage ? '' : 'is-disabled' %>"
+        href="<%= paginationData.hasPreviousPage ? buildPageHref(paginationData.currentPage - 1) : '#' %>"
+        aria-disabled="<%= paginationData.hasPreviousPage ? 'false' : 'true' %>"
+      >
+        Anterior
+      </a>
+
+      <div class="pagination-pages" aria-label="Páginas disponíveis">
+        <% const visiblePages = getVisiblePages(paginationData); %>
+        <% visiblePages.forEach((pageNumber, index) => { %>
+          <% const previousPage = visiblePages[index - 1]; %>
+          <% if (index > 0 && pageNumber - previousPage > 1) { %>
+            <span class="pagination-ellipsis" aria-hidden="true">...</span>
+          <% } %>
+
+          <% if (pageNumber === paginationData.currentPage) { %>
+            <span class="pagination-page is-current" aria-current="page"><%= pageNumber %></span>
+          <% } else { %>
+            <a class="pagination-page" href="<%= buildPageHref(pageNumber) %>"><%= pageNumber %></a>
+          <% } %>
+        <% }) %>
+      </div>
+
+      <a
+        class="btn ghost small pagination-nav <%= paginationData.hasNextPage ? '' : 'is-disabled' %>"
+        href="<%= paginationData.hasNextPage ? buildPageHref(paginationData.currentPage + 1) : '#' %>"
+        aria-disabled="<%= paginationData.hasNextPage ? 'false' : 'true' %>"
+      >
+        Próxima
+      </a>
+    </div>
+  </nav>
+<% } %>

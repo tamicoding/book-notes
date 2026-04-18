@@ -19,7 +19,7 @@ It was built as a portfolio project to demonstrate backend, authentication, secu
 
 Aplicação online: https://book-notes-vvs0.onrender.com
 
-Vídeo demo: `[adicione aqui o link do vídeo]`
+Vídeo demo: `[]`
 
 ### Screenshots
 
@@ -51,12 +51,15 @@ Adicione aqui as capturas principais do projeto:
 - Notas e avaliação por livro
 - Filtros por data de leitura
 - Paginação de livros na listagem principal, busca e filtros
+- Upload manual de capa com fallback para capa automática
 - Recuperação de senha por email
 - Autenticação baseada em sessão
 - Proteção CSRF em envios de formulário
 - Rate limit em solicitações de redefinição de senha
 - Sessões persistentes em produção
 - Testes de integração cobrindo auth, reset e CRUD
+- Testes E2E com Playwright
+- CI com GitHub Actions rodando integração e E2E
 
 ### Stack Tecnológica
 
@@ -66,9 +69,13 @@ Adicione aqui as capturas principais do projeto:
 - PostgreSQL
 - Passport.js
 - Express-session
+- Cloudinary
+- Multer
 - Zod
 - Nodemailer
 - Winston
+- Playwright
+- GitHub Actions
 - Render
 - Neon
 
@@ -97,14 +104,18 @@ Visão geral da estrutura:
 ├── services/
 │   ├── authService.js
 │   ├── bookService.js
+│   ├── cloudinaryService.js
 │   └── sessionStore.js
 ├── middleware/
 │   ├── auth.js
+│   ├── bookCoverUpload.js
 │   └── csrf.js
 ├── validation/
 │   └── schemas.js
 ├── views/
 ├── public/
+├── e2e/
+├── migrations/
 └── tests/
     ├── integration.test.js
     └── support/
@@ -116,7 +127,9 @@ Visão geral da estrutura:
 - Uso de PostgreSQL para persistência relacional e sessões em produção
 - Fluxo seguro de redefinição de senha com token hasheado
 - Validação centralizada com Zod
+- Upload manual de capas com Cloudinary para funcionar bem em produção no Render
 - Testes de integração sem depender do banco real de produção
+- E2E com Playwright cobrindo os fluxos principais no navegador
 
 ### Testes
 
@@ -174,6 +187,11 @@ A migration inicial cria:
 - `books`
 - `user_sessions`
 
+Migrations adicionais já incluídas no projeto:
+
+- `002_add_manual_cover_url`
+- `003_add_manual_cover_public_id`
+
 ### Como Rodar Localmente
 
 #### Pré-requisitos
@@ -213,6 +231,10 @@ SMTP_SECURE=false
 SMTP_USER=seu_smtp_user
 SMTP_PASS=sua_senha_smtp
 SMTP_FROM=seu_email_remetente
+
+CLOUDINARY_CLOUD_NAME=seu_cloud_name
+CLOUDINARY_API_KEY=sua_api_key
+CLOUDINARY_API_SECRET=seu_api_secret
 ```
 
 #### Executar
@@ -245,15 +267,17 @@ Observações:
 - o container da aplicação executa `npm run migrate:up` antes de iniciar
 - o banco padrão no Docker é `booknotes`
 - as credenciais padrão no Docker são `postgres/postgres`
-- variáveis de Google OAuth e SMTP ainda podem ser passadas pelo seu shell local ou `.env`
+- variáveis de Google OAuth, SMTP e Cloudinary ainda podem ser passadas pelo seu shell local ou `.env`
 - os testes Playwright não dependem desse stack Docker porque usam um servidor isolado em memória
 
 ### Deploy
 
 - Hospedagem da aplicação: Render
 - Banco de dados: Neon PostgreSQL
+- Upload de capas: Cloudinary
 - Variáveis de ambiente configuradas no painel do Render
 - Execute `npm run migrate:up` antes de iniciar a aplicação em um novo ambiente
+- Para produção, configure também `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`
 
 ### Por Que Este Projeto é Relevante
 
@@ -270,10 +294,9 @@ Este projeto foi desenvolvido para demonstrar habilidades práticas valorizadas 
 
 ### Próximas Melhorias
 
-- Pipeline CI com GitHub Actions
 - Tags ou categorias
 - Dashboard de estatísticas de leitura
-- Upload manual de capas
+- Busca e filtros combinados mais avançados
 - Refinos de UI/UX
 
 ### Autor
@@ -324,12 +347,15 @@ Add the main screenshots of the project here:
 - Notes and rating per book
 - Reading date filters
 - Book pagination across main list, search, and date filters
+- Manual cover uploads with automatic cover fallback
 - Password recovery via email
 - Session-based authentication
 - CSRF protection for form submissions
 - Rate limiting on password reset requests
 - Persistent sessions in production
 - Integration tests covering auth, reset password, and CRUD
+- End-to-end browser tests with Playwright
+- GitHub Actions CI running integration and E2E tests
 
 ### Tech Stack
 
@@ -339,9 +365,13 @@ Add the main screenshots of the project here:
 - PostgreSQL
 - Passport.js
 - Express-session
+- Cloudinary
+- Multer
 - Zod
 - Nodemailer
 - Winston
+- Playwright
+- GitHub Actions
 - Render
 - Neon
 
@@ -370,14 +400,18 @@ Project structure overview:
 ├── services/
 │   ├── authService.js
 │   ├── bookService.js
+│   ├── cloudinaryService.js
 │   └── sessionStore.js
 ├── middleware/
 │   ├── auth.js
+│   ├── bookCoverUpload.js
 │   └── csrf.js
 ├── validation/
 │   └── schemas.js
 ├── views/
 ├── public/
+├── e2e/
+├── migrations/
 └── tests/
     ├── integration.test.js
     └── support/
@@ -389,7 +423,9 @@ Project structure overview:
 - Used PostgreSQL for relational persistence and production session storage
 - Implemented secure password reset flow with hashed tokens
 - Centralized request validation with Zod
+- Added Cloudinary-based manual cover uploads so production does not rely on ephemeral local storage
 - Added integration tests without depending on the real production database
+- Added Playwright E2E coverage for core browser flows
 
 ### Tests
 
@@ -447,6 +483,11 @@ The initial migration creates:
 - `books`
 - `user_sessions`
 
+Additional migrations currently included:
+
+- `002_add_manual_cover_url`
+- `003_add_manual_cover_public_id`
+
 ### Running Locally
 
 #### Prerequisites
@@ -486,6 +527,10 @@ SMTP_SECURE=false
 SMTP_USER=your_smtp_user
 SMTP_PASS=your_smtp_password
 SMTP_FROM=your_from_email
+
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 #### Start the Application
@@ -518,15 +563,17 @@ Notes:
 - the application container runs `npm run migrate:up` before starting
 - the default Docker database is `booknotes`
 - the default Docker credentials are `postgres/postgres`
-- Google OAuth and SMTP variables can still be passed from your local shell or `.env`
+- Google OAuth, SMTP, and Cloudinary variables can still be passed from your local shell or `.env`
 - Playwright tests do not depend on this Docker stack because they use an isolated in-memory test server
 
 ### Deployment
 
 - Application hosting: Render
 - Database hosting: Neon PostgreSQL
+- Cover upload hosting: Cloudinary
 - Environment variables configured in the Render dashboard
 - Run `npm run migrate:up` before starting the app in a new environment
+- In production, also configure `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`
 
 ### Why This Project Matters
 
@@ -543,10 +590,9 @@ This project was built to demonstrate practical full-stack development skills ex
 
 ### Future Improvements
 
-- GitHub Actions CI pipeline
 - Tags or categories
 - Reading statistics dashboard
-- Manual upload for book covers
+- More advanced combined filters and search UX
 - UI/UX refinements
 
 ### Author

@@ -44,7 +44,7 @@
 
     <% if (user) { %>
       <div class="header-user desktop-only">
-        <span>Olá, <strong><%= user.name %></strong></span>
+        <span>Olá,&nbsp;<strong><%= user.name %></strong></span>
         <form action="/logout" method="post" style="display:inline;">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button class="btn ghost small" type="submit">Sair</button>

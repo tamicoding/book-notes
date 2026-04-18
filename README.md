@@ -33,15 +33,13 @@ Adicione aqui as capturas principais do projeto:
 - Excluir livro
 - Reset de senha
 
-```md
-![Dashboard](./assets/dashboard.png)
-![Login](./assets/login.png)
-![Cadastro](./assets/register.png)
-![Adicionar Livro](./assets/add.png)
-![Editar Livro](./assets/edit.png)
-![Excluir Livro](./assets/delete.png)
-![Reset de Senha](./assets/reset.png)
-```
+![Dashboard](assets/dashboard.png)
+![Login](assets/login.png)
+![Cadastro](assets/register.png)
+![Adicionar Livro](assets/add.png)
+![Editar Livro](assets/edit.png)
+![Excluir Livro](assets/delete.png)
+![Reset de Senha](assets/reset.png)
 
 ### Funcionalidades
 
@@ -329,15 +327,13 @@ Add the main screenshots of the project here:
 - Delete book
 - Password reset
 
-```md
-![Dashboard](./assets/dashboard.png)
-![Login](./assets/login.png)
-![Register](./assets/register.png)
-![Add Book](./assets/add.png)
-![Edit Book](./assets/edit.png)
-![Delete Book](./assets/delete.png)
-![Reset Password](./assets/reset.png)
-```
+![Dashboard](assets/dashboard.png)
+![Login](assets/login.png)
+![Register](assets/register.png)
+![Add Book](assets/add.png)
+![Edit Book](assets/edit.png)
+![Delete Book](assets/delete.png)
+![Reset Password](assets/reset.png)
 
 ### Features
 

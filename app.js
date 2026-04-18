@@ -76,6 +76,7 @@ export function createApp(options = {}) {
   app.use((req, res, next) => {
     res.locals.user = req.user || null;
     res.locals.title = "MyBooks";
+    res.locals.googleOAuthEnabled = authService.googleOAuthEnabled;
     next();
   });
 

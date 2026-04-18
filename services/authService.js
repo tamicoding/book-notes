@@ -15,6 +15,12 @@ import {
 import { ValidationError } from "../utils/validation.js";
 
 export function createAuthService({ pool, sendResetEmail, logger, isProd }) {
+  const googleOAuthEnabled = Boolean(
+    process.env.GOOGLE_CLIENT_ID?.trim() &&
+      process.env.GOOGLE_CLIENT_SECRET?.trim() &&
+      process.env.GOOGLE_CALLBACK_URL?.trim()
+  );
+
   function renderAuthView(res, view, payload = {}) {
     return res.status(payload.statusCode || 400).render(view, payload);
   }
@@ -205,23 +211,25 @@ export function createAuthService({ pool, sendResetEmail, logger, isProd }) {
       )
     );
 
-    passport.use(
-      new GoogleStrategy(
-        {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          callbackURL: process.env.GOOGLE_CALLBACK_URL,
-        },
-        async (_accessToken, _refreshToken, profile, done) => {
-          try {
-            const user = await findOrCreateGoogleUser(profile);
-            return done(null, user);
-          } catch (error) {
-            return done(error, null);
+    if (googleOAuthEnabled) {
+      passport.use(
+        new GoogleStrategy(
+          {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: process.env.GOOGLE_CALLBACK_URL,
+          },
+          async (_accessToken, _refreshToken, profile, done) => {
+            try {
+              const user = await findOrCreateGoogleUser(profile);
+              return done(null, user);
+            } catch (error) {
+              return done(error, null);
+            }
           }
-        }
-      )
-    );
+        )
+      );
+    }
 
     passport.serializeUser((user, done) => done(null, user.id));
     passport.deserializeUser(async (id, done) => {
@@ -236,6 +244,7 @@ export function createAuthService({ pool, sendResetEmail, logger, isProd }) {
 
   return {
     configurePassport,
+    googleOAuthEnabled,
     renderAuthView,
     registerUser,
     requestPasswordReset,

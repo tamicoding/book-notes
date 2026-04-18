@@ -14,7 +14,7 @@ test("user can register, log out and log back in", async ({ page }) => {
   await page.getByRole("button", { name: "Registrar" }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText("Olá, Tamiris")).toBeVisible();
+  await expect(page.locator(".header-user span")).toContainText("Olá, Tamiris");
 
   await page.getByRole("button", { name: "Sair" }).first().click();
   await expect(page).toHaveURL(/\/login$/);
@@ -24,7 +24,7 @@ test("user can register, log out and log back in", async ({ page }) => {
   await page.getByRole("button", { name: "Entrar" }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText("Olá, Tamiris")).toBeVisible();
+  await expect(page.locator(".header-user span")).toContainText("Olá, Tamiris");
 });
 
 test("user can request password reset and sign in with the new password", async ({
@@ -65,7 +65,7 @@ test("user can request password reset and sign in with the new password", async 
   await page.getByRole("button", { name: "Entrar" }).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText("Olá, Leitora")).toBeVisible();
+  await expect(page.locator(".header-user span")).toContainText("Olá, Leitora");
 });
 
 test("user can create, edit, search and delete a book from the UI", async ({ page }) => {
@@ -111,5 +111,5 @@ test("user can create, edit, search and delete a book from the UI", async ({ pag
 
   await expect(page).toHaveURL(/status=deleted/);
   await expect(page.getByText("Livro removido com sucesso.")).toBeVisible();
-  await expect(page.getByText("Nenhum livro cadastrado.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sua estante ainda está vazia" })).toBeVisible();
 });

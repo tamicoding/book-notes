@@ -526,6 +526,7 @@ export async function createE2EServer(port = 3100) {
   const pool = new InMemoryPool();
   const mail = createMailStub();
   const mediaService = createMediaStub();
+  process.env.BASE_URL = `http://127.0.0.1:${port}`;
   const app = createApp({
     pool,
     sendResetEmail: mail.sendResetEmail,

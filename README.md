@@ -2,11 +2,14 @@
 
 ![CI](https://github.com/tamicoding/book-notes/actions/workflows/ci.yml/badge.svg)
 
-BookNotes é uma aplicação web full-stack para acompanhar livros, anotações pessoais, avaliações e histórico de leitura.
-Ela foi desenvolvida como projeto de portfólio para demonstrar habilidades de backend, autenticação, segurança, testes e deploy em produção com Node.js e PostgreSQL.
+BookNotes é uma aplicação web full-stack para organizar leituras, registrar notas, acompanhar avaliações e manter um histórico pessoal de livros lidos. O projeto foi desenvolvido para demonstrar práticas reais de backend, segurança, testes automatizados e deploy em produção com Node.js e PostgreSQL.
 
-BookNotes is a full-stack web application for tracking books, personal notes, ratings, and reading history.
-It was built as a portfolio project to demonstrate backend, authentication, security, testing, and production deployment skills with Node.js and PostgreSQL.
+BookNotes is a full-stack web application for organizing reading notes, ratings, and personal book history. It was built to showcase practical backend engineering, security, automated testing, and production deployment with Node.js and PostgreSQL.
+
+Demo: https://book-notes-vvs0.onrender.com  
+Repository: https://github.com/tamicoding/book-notes  
+LinkedIn: https://www.linkedin.com/in/tamirisfreis/  
+Video: In Progress
 
 ## Índice
 
@@ -15,30 +18,43 @@ It was built as a portfolio project to demonstrate backend, authentication, secu
 
 ## PT-BR
 
+### Highlights
+
+- autenticação local e com Google OAuth
+- recuperação de senha com token temporário e envio por email
+- CSRF, rate limit e sessões persistidas em PostgreSQL
+- upload manual de capas com Cloudinary
+- testes de integração, testes E2E com Playwright e CI com GitHub Actions
+
 ### Demo
 
 Aplicação online: https://book-notes-vvs0.onrender.com
 
-Vídeo demo: `[]`
+Repositório: https://github.com/tamicoding/book-notes
+
+Vídeo demo: Em produção
 
 ### Screenshots
 
-Adicione aqui as capturas principais do projeto:
+Fluxo visual principal do projeto:
 
-- Dashboard / home
-- Login
-- Cadastro
-- Adicionar livro
-- Editar livro
-- Excluir livro
-- Reset de senha
+1. Home / dashboard
 
 ![Dashboard](assets/dashboard.png)
+
+2. Autenticação
+
 ![Login](assets/login.png)
 ![Cadastro](assets/register.png)
+
+3. CRUD de livros
+
 ![Adicionar Livro](assets/add.png)
 ![Editar Livro](assets/edit.png)
 ![Excluir Livro](assets/delete.png)
+
+4. Recuperação de senha
+
 ![Reset de Senha](assets/reset.png)
 
 ### Funcionalidades
@@ -309,30 +325,43 @@ GitHub: https://github.com/tamicoding
 
 ## English
 
+### Highlights
+
+- local authentication and Google OAuth
+- password reset flow with temporary token and email delivery
+- CSRF, rate limiting, and PostgreSQL-backed sessions
+- manual book cover uploads with Cloudinary
+- integration tests, Playwright E2E coverage, and GitHub Actions CI
+
 ### Live Demo
 
 Live application: https://book-notes-vvs0.onrender.com
 
-Video demo: `[add demo video link here]`
+Repository: https://github.com/tamicoding/book-notes
+
+Video demo: In Progress
 
 ### Screenshots
 
-Add the main screenshots of the project here:
+Main visual flow of the application:
 
-- Dashboard / home
-- Login
-- Register
-- Add book
-- Edit book
-- Delete book
-- Password reset
+1. Home / dashboard
 
 ![Dashboard](assets/dashboard.png)
+
+2. Authentication
+
 ![Login](assets/login.png)
 ![Register](assets/register.png)
+
+3. Book CRUD
+
 ![Add Book](assets/add.png)
 ![Edit Book](assets/edit.png)
 ![Delete Book](assets/delete.png)
+
+4. Password reset
+
 ![Reset Password](assets/reset.png)
 
 ### Features

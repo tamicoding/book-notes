@@ -9,6 +9,10 @@ node_modules/
 *.log
 logs/
 
+# generated uploads
+public/uploads/covers/*
+!public/uploads/covers/.gitkeep
+
 # OS files
 .DS_Store
 Thumbs.db

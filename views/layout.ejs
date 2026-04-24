@@ -163,6 +163,16 @@
     <%- body %>
   </main>
 
+  <script>
+    document.querySelectorAll("[data-auto-dismiss]").forEach((alert) => {
+      const delay = Number(alert.dataset.autoDismiss) || 4500;
+      window.setTimeout(() => {
+        alert.classList.add("is-dismissing");
+        window.setTimeout(() => alert.remove(), 260);
+      }, delay);
+    });
+  </script>
+
   <!-- FOOTER -->
   <footer class="site-footer">
     <small>© Book Notes — criado por Tamiris Reis</small>

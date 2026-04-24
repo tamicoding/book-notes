@@ -34,7 +34,13 @@
 <% } %>
 
 <% if (message) { %>
-  <div class="alert alert--<%= messageType || 'info' %> page-alert"><%= message %></div>
+  <div
+    class="alert alert--<%= messageType || 'info' %> page-alert"
+    role="status"
+    data-auto-dismiss="4500"
+  >
+    <%= message %>
+  </div>
 <% } %>
 
 <% if (activeView) { %>

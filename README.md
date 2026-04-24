@@ -362,7 +362,6 @@ Main visual flow of the application:
 3. Password recovery and reset
 
 ![Forgot Password](assets/forgot.png)
-![Reset Password](assets/reset.png)
 
 4. Book CRUD
 

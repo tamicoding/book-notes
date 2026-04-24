@@ -9,7 +9,7 @@ BookNotes is a full-stack web application for organizing reading notes, ratings,
 Demo: https://book-notes-vvs0.onrender.com  
 Repository: https://github.com/tamicoding/book-notes  
 LinkedIn: https://www.linkedin.com/in/tamirisfreis/  
-Video: In Progress
+Video: https://youtu.be/MuBE76vhMYA
 
 ## Índice
 
@@ -32,7 +32,7 @@ Aplicação online: https://book-notes-vvs0.onrender.com
 
 Repositório: https://github.com/tamicoding/book-notes
 
-Vídeo demo: Em produção
+Vídeo demo: https://youtu.be/MuBE76vhMYA
 
 ### Screenshots
 
@@ -344,7 +344,7 @@ Live application: https://book-notes-vvs0.onrender.com
 
 Repository: https://github.com/tamicoding/book-notes
 
-Video demo: In Progress
+Video demo: https://youtu.be/MuBE76vhMYA
 
 ### Screenshots
 

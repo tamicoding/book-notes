@@ -38,24 +38,29 @@ Vídeo demo: Em produção
 
 Fluxo visual principal do projeto:
 
-1. Home / dashboard
+1. Dashboard principal
 
 ![Dashboard](assets/dashboard.png)
 
-2. Autenticação
+2. Login e cadastro
 
 ![Login](assets/login.png)
 ![Cadastro](assets/register.png)
 
-3. CRUD de livros
+3. Recuperação e redefinição de senha
+
+![Esqueci a senha](assets/forgot.png)
+![Reset de Senha](assets/reset.png)
+
+4. CRUD de livros
 
 ![Adicionar Livro](assets/add.png)
 ![Editar Livro](assets/edit.png)
 ![Excluir Livro](assets/delete.png)
 
-4. Recuperação de senha
+5. Experiência mobile
 
-![Reset de Senha](assets/reset.png)
+![Versão mobile](assets/mobile.png)
 
 ### Funcionalidades
 
@@ -345,24 +350,29 @@ Video demo: In Progress
 
 Main visual flow of the application:
 
-1. Home / dashboard
+1. Main dashboard
 
 ![Dashboard](assets/dashboard.png)
 
-2. Authentication
+2. Login and registration
 
 ![Login](assets/login.png)
 ![Register](assets/register.png)
 
-3. Book CRUD
+3. Password recovery and reset
+
+![Forgot Password](assets/forgot.png)
+![Reset Password](assets/reset.png)
+
+4. Book CRUD
 
 ![Add Book](assets/add.png)
 ![Edit Book](assets/edit.png)
 ![Delete Book](assets/delete.png)
 
-4. Password reset
+5. Mobile experience
 
-![Reset Password](assets/reset.png)
+![Mobile View](assets/mobile.png)
 
 ### Features
 

@@ -76,7 +76,9 @@
 <aside class="date-filter" id="dateFilter">
   <div class="date-filter-head">
     <h3>Filtrar por data</h3>
-    <button class="icon-btn mobile-only" type="button" onclick="closeFilterDrawer()">✕</button>
+    <button class="icon-btn close-btn mobile-only" type="button" onclick="closeFilterDrawer()" aria-label="Fechar filtros">
+      <span class="close-btn-mark" aria-hidden="true"></span>
+    </button>
   </div>
 
   <% // map: {year: {month: [day,day...]}}
@@ -159,7 +161,7 @@
     <!-- Botão de logout mobile only dentro do drawer -->
     <form action="/logout" method="post">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button class="btn ghost full" type="submit">Sair</button>
+      <button class="btn danger full" type="submit">Sair</button>
     </form>
   </div>
 </aside>
@@ -243,7 +245,7 @@
       </div>
 
       <div class="card-actions">
-        <a class="btn small" href="/books/edit/<%= book.id %>">Editar</a>
+        <a class="btn small card-edit" href="/books/edit/<%= book.id %>">Editar</a>
         <a class="btn small danger" href="/books/delete/<%= book.id %>">Excluir</a>
       </div>
 

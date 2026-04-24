@@ -15,16 +15,29 @@
   </script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Sora:wght@600;700;800&display=swap');
   </style>
 
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css" />
 </head>
 
 <body data-logged="<%= !!user %>">
   <!-- HEADER: marca, usuário e botão mobile -->
   <header class="site-header">
-    <a class="brand" href="/">Book Notes</a>
+    <a class="brand" href="/" aria-label="Book Notes home">
+      <span class="brand-mark" aria-hidden="true">
+        <span class="brand-mark-book">
+          <span class="brand-mark-page brand-mark-page--left"></span>
+          <span class="brand-mark-page brand-mark-page--right"></span>
+          <span class="brand-mark-spine"></span>
+        </span>
+      </span>
+      <span class="brand-copy">
+        <span class="brand-eyebrow">Personal Library</span>
+        <span class="brand-name">Book Notes</span>
+      </span>
+    </a>
 
     <div class="header-theme">
       <button
@@ -47,13 +60,19 @@
         <span>Olá,&nbsp;<strong><%= user.name %></strong></span>
         <form action="/logout" method="post" style="display:inline;">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button class="btn ghost small" type="submit">Sair</button>
+          <button class="btn danger small" type="submit">Sair</button>
         </form>
       </div>
     <% } %>
 
     <div class="header-actions">
-      <button class="icon-btn mobile-only" id="menuToggle" aria-label="Abrir menu">☰</button>
+      <button class="icon-btn mobile-only menu-toggle" id="menuToggle" aria-label="Abrir menu">
+        <span class="menu-toggle-bars" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
     </div>
   </header>
 
@@ -65,7 +84,9 @@
     <aside class="drawer" id="authDrawer" aria-hidden="true">
       <div class="drawer-head">
         <span class="drawer-title">Menu</span>
-        <button class="icon-btn" id="drawerClose" aria-label="Fechar">✕</button>
+        <button class="icon-btn close-btn" id="drawerClose" aria-label="Fechar">
+          <span class="close-btn-mark" aria-hidden="true"></span>
+        </button>
       </div>
 
       <div class="drawer-body">
